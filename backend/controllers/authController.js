@@ -1,17 +1,17 @@
 /**
  * Auth Controller – Admin login
+ * 
  */
 
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const { supabaseAdmin } = require('../config/supabase');
 
-// Demo admin (used when Supabase is not configured)
-const DEMO_ADMIN = {
-  email: process.env.ADMIN_EMAIL || 'admin@mercysblog.com',
-  // Pre-hashed "Admin12345" for demo – replace in production
-  password: 'Admin12345'
-};
+function getAdminCredentials() {
+  return {
+    email: (process.env.ADMIN_EMAIL || '').trim().toLowerCase(),
+    password: process.env.ADMIN_PASSWORD || ''
+  };
+}
 
 exports.login = async (req, res) => {
   try {
@@ -21,47 +21,33 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
-    // ---------- Supabase Auth path ----------
-    if (supabaseAdmin) {
-      /*
-      const { data, error } = await supabaseAdmin.auth.signInWithPassword({
-        email,
-        password
+    const admin = getAdminCredentials();
+
+    // Fail closed if credentials are not configured in production
+    if (!admin.email || !admin.password) {
+      console.error('ADMIN_EMAIL or ADMIN_PASSWORD is not set');
+      return res.status(500).json({
+        success: false,
+        message: 'Admin login is not configured. Set ADMIN_EMAIL and ADMIN_PASSWORD on the server.'
       });
-
-      if (error) {
-        return res.status(401).json({ success: false, message: 'Invalid email or password' });
-      }
-
-      // Optionally check if user has admin role in a profiles table
-      const token = jwt.sign(
-        { id: data.user.id, email: data.user.email, role: 'admin' },
-        process.env.JWT_SECRET,
-        { expiresIn: rememberMe ? '30d' : process.env.JWT_EXPIRES_IN || '7d' }
-      );
-
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        token,
-        user: { id: data.user.id, email: data.user.email }
-      });
-      */
     }
 
-    // ---------- Demo / fallback path ----------
-    if (email === DEMO_ADMIN.email && password === DEMO_ADMIN.password) {
+    // ---------- Env-based admin login ----------
+    if (
+      email.trim().toLowerCase() === admin.email &&
+      password === admin.password
+    ) {
       const token = jwt.sign(
-        { id: 'admin-1', email: DEMO_ADMIN.email, role: 'admin' },
+        { id: 'admin-1', email: admin.email, role: 'admin' },
         process.env.JWT_SECRET || 'dev_secret',
-        { expiresIn: rememberMe ? '30d' : '7d' }
+        { expiresIn: rememberMe ? '30d' : (process.env.JWT_EXPIRES_IN || '7d') }
       );
 
       return res.json({
         success: true,
         message: 'Login successful',
         token,
-        user: { id: 'admin-1', email: DEMO_ADMIN.email, role: 'admin' }
+        user: { id: 'admin-1', email: admin.email, role: 'admin' }
       });
     }
 
@@ -75,3 +61,8 @@ exports.login = async (req, res) => {
 exports.me = async (req, res) => {
   res.json({ success: true, user: req.user });
 };
+
+
+
+
+
