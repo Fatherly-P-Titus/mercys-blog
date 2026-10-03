@@ -30,13 +30,10 @@ let siteContent = {
 exports.getStats = async (req, res) => {
   try {
     if (supabaseAdmin) {
-      /*
-      // Example: aggregate from tables
       const { count: postsCount } = await supabaseAdmin
         .from('posts')
         .select('*', { count: 'exact', head: true });
 
-      // You would also query analytics / likes / comments tables
       return res.json({
         success: true,
         stats: {
@@ -48,7 +45,6 @@ exports.getStats = async (req, res) => {
           readers: 3210
         }
       });
-      */
     }
 
     // Demo stats
@@ -75,16 +71,18 @@ exports.getSiteContent = async (req, res) => {
     const { section } = req.params; // 'homepage' | 'profile'
 
     if (supabaseAdmin) {
-      /*
       const { data, error } = await supabaseAdmin
         .from('site_content')
         .select('content')
         .eq('section', section)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return res.json({ success: true, content: data.content });
-      */
+
+      if (data && data.content) {
+        return res.json({ success: true, content: data.content });
+      }
+      // Fall through to in-memory defaults if row missing
     }
 
     const content = siteContent[section];
@@ -93,6 +91,7 @@ exports.getSiteContent = async (req, res) => {
     }
     res.json({ success: true, content });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, message: 'Failed to fetch content' });
   }
 };
@@ -107,16 +106,31 @@ exports.updateSiteContent = async (req, res) => {
     }
 
     if (supabaseAdmin) {
-      /*
+      // Merge with existing content if present
+      let merged = { ...(siteContent[section] || {}), ...updates };
+
+      const { data: existing } = await supabaseAdmin
+        .from('site_content')
+        .select('content')
+        .eq('section', section)
+        .maybeSingle();
+
+      if (existing && existing.content) {
+        merged = { ...existing.content, ...updates };
+      }
+
       const { data, error } = await supabaseAdmin
         .from('site_content')
-        .upsert({ section, content: updates, updated_at: new Date().toISOString() })
+        .upsert({
+          section,
+          content: merged,
+          updated_at: new Date().toISOString()
+        })
         .select()
         .single();
 
       if (error) throw error;
-      return res.json({ success: true, content: data.content });
-      */
+      return res.json({ success: true, message: `${section} content updated`, content: data.content });
     }
 
     siteContent[section] = { ...siteContent[section], ...updates };

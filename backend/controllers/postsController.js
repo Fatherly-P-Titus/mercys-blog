@@ -32,7 +32,6 @@ exports.getPosts = async (req, res) => {
     const { category, page = 1, limit = 10, status = 'published' } = req.query;
 
     if (supabase) {
-      /*
       let query = supabase
         .from('posts')
         .select('*', { count: 'exact' })
@@ -43,7 +42,7 @@ exports.getPosts = async (req, res) => {
         query = query.eq('category', category);
       }
 
-      const from = (page - 1) * limit;
+      const from = (page - 1) * Number(limit);
       const to = from + Number(limit) - 1;
       query = query.range(from, to);
 
@@ -52,12 +51,11 @@ exports.getPosts = async (req, res) => {
 
       return res.json({
         success: true,
-        posts: data,
-        total: count,
+        posts: data || [],
+        total: count || 0,
         page: Number(page),
-        hasMore: count > page * limit
+        hasMore: (count || 0) > page * limit
       });
-      */
     }
 
     // Demo fallback
@@ -65,7 +63,7 @@ exports.getPosts = async (req, res) => {
     if (category && category !== 'all') {
       posts = posts.filter(p => p.category === category);
     }
-    const start = (page - 1) * limit;
+    const start = (page - 1) * Number(limit);
     const sliced = posts.slice(start, start + Number(limit));
 
     res.json({
@@ -86,18 +84,22 @@ exports.getPost = async (req, res) => {
     const { idOrSlug } = req.params;
 
     if (supabase) {
-      /*
-      const { data, error } = await supabase
-        .from('posts')
-        .select('*')
-        .or(`id.eq.${idOrSlug},slug.eq.${idOrSlug}`)
-        .single();
+      const isNumeric = /^\d+$/.test(idOrSlug);
+      let query = supabase.from('posts').select('*');
 
-      if (error || !data) {
+      if (isNumeric) {
+        query = query.eq('id', idOrSlug);
+      } else {
+        query = query.eq('slug', idOrSlug);
+      }
+
+      const { data, error } = await query.maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
         return res.status(404).json({ success: false, message: 'Post not found' });
       }
       return res.json({ success: true, post: data });
-      */
     }
 
     const post = demoPosts.find(p => p.id == idOrSlug || p.slug === idOrSlug);
@@ -106,6 +108,7 @@ exports.getPost = async (req, res) => {
     }
     res.json({ success: true, post });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, message: 'Failed to fetch post' });
   }
 };
@@ -124,25 +127,32 @@ exports.createPost = async (req, res) => {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
+    let parsedTags = [];
+    if (Array.isArray(tags)) {
+      parsedTags = tags;
+    } else if (typeof tags === 'string' && tags.trim()) {
+      try {
+        parsedTags = JSON.parse(tags);
+      } catch {
+        parsedTags = tags.split(',').map(t => t.trim()).filter(Boolean);
+      }
+    }
+
     const newPost = {
-      id: Date.now(),
       title,
       slug,
       excerpt: excerpt || '',
       content,
       category: type || 'general',
-      tags: Array.isArray(tags) ? tags : (tags ? JSON.parse(tags) : []),
+      tags: parsedTags,
       status,
       author: 'Mercy',
       image: req.file ? `/uploads/${req.file.filename}` : null,
       views: 0,
-      likes: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      likes: 0
     };
 
     if (supabaseAdmin) {
-      /*
       const { data, error } = await supabaseAdmin
         .from('posts')
         .insert([newPost])
@@ -150,12 +160,17 @@ exports.createPost = async (req, res) => {
         .single();
 
       if (error) throw error;
-      return res.status(201).json({ success: true, post: data });
-      */
+      return res.status(201).json({ success: true, message: 'Post created', post: data });
     }
 
-    demoPosts.unshift(newPost);
-    res.status(201).json({ success: true, message: 'Post created', post: newPost });
+    const demoPost = {
+      ...newPost,
+      id: Date.now(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    demoPosts.unshift(demoPost);
+    res.status(201).json({ success: true, message: 'Post created', post: demoPost });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Failed to create post' });
@@ -165,29 +180,29 @@ exports.createPost = async (req, res) => {
 exports.updatePost = async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const updates = { ...req.body, updated_at: new Date().toISOString() };
+    delete updates.id;
 
     if (supabaseAdmin) {
-      /*
       const { data, error } = await supabaseAdmin
         .from('posts')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
       return res.json({ success: true, post: data });
-      */
     }
 
     const index = demoPosts.findIndex(p => p.id == id);
     if (index === -1) {
       return res.status(404).json({ success: false, message: 'Post not found' });
     }
-    demoPosts[index] = { ...demoPosts[index], ...updates, updated_at: new Date().toISOString() };
+    demoPosts[index] = { ...demoPosts[index], ...updates };
     res.json({ success: true, post: demoPosts[index] });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, message: 'Failed to update post' });
   }
 };
@@ -197,16 +212,15 @@ exports.deletePost = async (req, res) => {
     const { id } = req.params;
 
     if (supabaseAdmin) {
-      /*
       const { error } = await supabaseAdmin.from('posts').delete().eq('id', id);
       if (error) throw error;
       return res.json({ success: true, message: 'Post deleted' });
-      */
     }
 
     demoPosts = demoPosts.filter(p => p.id != id);
     res.json({ success: true, message: 'Post deleted' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, message: 'Failed to delete post' });
   }
 };
