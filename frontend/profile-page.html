@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="About Mercy - Mercy's Blog">
+    <title>About Mercy | Mercy's Blog</title>
+    
+    <!-- Shared + Page Styles -->
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/profile-page.css">
+    
+    <!-- Local jQuery -->
+    <script src="scripts/jquery.js"></script>
+    <script src="scripts/api.js"></script>
+</head>
+<body>
+    <!-- ========== HEADER ========== -->
+    <header class="site-header" id="siteHeader">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">M</span>
+                <span class="logo-text">Mercy's Blog</span>
+            </a>
+
+            <nav class="main-nav" id="mainNav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="profile-page.html" class="active">About</a></li>
+                    <li><a href="index.html#categories">Categories</a></li>
+                    <li><a href="admin-login.html" class="nav-admin">Admin</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <button class="search-toggle" id="searchToggle" aria-label="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+                <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar" id="searchBar">
+            <div class="container">
+                <form class="search-form" id="searchForm">
+                    <input type="search" id="searchInput" placeholder="Search posts..." autocomplete="off">
+                    <button type="submit" aria-label="Submit search">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========== PROFILE HERO ========== -->
+    <section class="profile-hero">
+        <div class="container">
+            <div class="profile-hero-inner">
+                <div class="profile-avatar-wrap">
+                    <img src="assets/images/avatar.jpg" alt="Mercy" class="profile-avatar" width="140" height="140">
+                </div>
+                <div class="profile-intro">
+                    <h1>Mercy</h1>
+                    <p class="profile-tagline">Writer · Thinker · Everyday Observer</p>
+                    <p class="profile-short-bio">
+                        Sharing honest thoughts on lifestyle, personal growth, relationships, and the quiet moments that shape who we become.
+                    </p>
+                    <div class="profile-social">
+                        <a href="#" class="social-link" aria-label="Twitter / X" title="Twitter / X">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.792l7.73-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Instagram" title="Instagram">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Email" title="Email">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="statPosts">40+</span>
+                    <span class="stat-label">Articles</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="statViews">28k</span>
+                    <span class="stat-label">Total Views</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="statReaders">3.2k</span>
+                    <span class="stat-label">Readers</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="profile-main">
+        <div class="container">
+            <div class="profile-layout">
+                <!-- About Section -->
+                <section class="about-section">
+                    <h2>About Me</h2>
+                    <div class="about-content">
+                        <p>
+                            Hi, I’m Mercy. I write about the things that sit at the intersection of everyday life and deeper meaning — how we live, how we grow, how we relate to ourselves and each other.
+                        </p>
+                        <p>
+                            This space started as a personal journal and slowly became a place where I could share reflections on lifestyle, personal growth, relationships, and the quiet truths we often overlook. I believe the most interesting stories are the ones that happen in ordinary moments.
+                        </p>
+                        <p>
+                            When I’m not writing, you’ll find me with a good book, experimenting in the kitchen, or taking long walks without a destination. I’m always learning, always observing, and always trying to live a little more intentionally.
+                        </p>
+                        <p>
+                            Thank you for being here. I hope something on these pages meets you where you are.
+                        </p>
+                    </div>
+
+                    <!-- Topics / Interests -->
+                    <div class="topics-section">
+                        <h3>Topics I Write About</h3>
+                        <div class="topics-list">
+                            <span class="topic-tag">Lifestyle</span>
+                            <span class="topic-tag">Personal Growth</span>
+                            <span class="topic-tag">Relationships</span>
+                            <span class="topic-tag">Mindfulness</span>
+                            <span class="topic-tag">Self-Discovery</span>
+                            <span class="topic-tag">Everyday Moments</span>
+                            <span class="topic-tag">Balance</span>
+                            <span class="topic-tag">Opinions</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sidebar -->
+                <aside class="profile-sidebar">
+                    <!-- Quick Links -->
+                    <div class="sidebar-card">
+                        <h3>Quick Links</h3>
+                        <ul class="quick-links">
+                            <li><a href="index.html">← Back to Home</a></li>
+                            <li><a href="index.html#categories">Browse Categories</a></li>
+                            <li><a href="#latest-from-me">Latest from Me</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact Card -->
+                    <div class="sidebar-card contact-card">
+                        <h3>Get in Touch</h3>
+                        <p>Have a thought, question, or just want to say hello? I’d love to hear from you.</p>
+                        <a href="mailto:hello@mercysblog.com" class="btn-primary btn-sm">Send Email</a>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- Latest Posts by Mercy -->
+            <section class="latest-from-me" id="latest-from-me">
+                <div class="section-header">
+                    <h2>Latest from Me</h2>
+                    <a href="index.html" class="btn-text">View all posts →</a>
+                </div>
+                <div class="profile-posts-grid" id="profilePostsGrid">
+                    <!-- Injected by JS -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo">
+                        <span class="logo-icon">M</span>
+                        <span class="logo-text">Mercy's Blog</span>
+                    </a>
+                    <p>Personal thoughts on lifestyle, growth, and the things that matter.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="profile-page.html">About</a></li>
+                        <li><a href="index.html#categories">Categories</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Connect</h4>
+                    <ul>
+                        <li><a href="#">Twitter / X</a></li>
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="#">Email</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Mercy's Blog. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="scripts/main.js"></script>
+    <script src="scripts/profile-page.js"></script>
+</body>
+</html>

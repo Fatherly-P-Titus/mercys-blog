@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Admin Dashboard - Mercy's Blog">
+    <title>Admin Dashboard | Mercy's Blog</title>
+    
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/admin-dashboard.css">
+    <script src="scripts/jquery.js"></script>
+</head>
+<body class="admin-body">
+    <!-- ========== ADMIN HEADER ========== -->
+    <header class="admin-header" id="adminHeader">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">M</span>
+                <span class="logo-text">Mercy's Blog</span>
+                <span class="admin-badge">Admin</span>
+            </a>
+
+            <nav class="admin-nav" id="adminNav">
+                <ul>
+                    <li><a href="admin-dashboard.html" class="active">Dashboard</a></li>
+                    <li><a href="post-creator.html">Create Post</a></li>
+                    <li><a href="index.html" target="_blank">View Site</a></li>
+                    <li><a href="admin-login.html" class="nav-logout" id="logoutBtn">Logout</a></li>
+                </ul>
+            </nav>
+
+            <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ========== MAIN ========== -->
+    <main class="dashboard-main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="dashboard-header">
+                <div>
+                    <h1>Admin Dashboard</h1>
+                    <p class="subtitle">Overview & site content controls</p>
+                </div>
+                <a href="post-creator.html" class="btn-primary">+ New Post</a>
+            </div>
+
+            <!-- ========== STATS CARDS ========== -->
+            <section class="stats-section">
+                <h2 class="section-title">Site Stats</h2>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon visitors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statVisitors">12,480</span>
+                            <span class="stat-label">Visitors</span>
+                        </div>
+                        <span class="stat-change up">+12%</span>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon views">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statViews">48,320</span>
+                            <span class="stat-label">Total Views</span>
+                        </div>
+                        <span class="stat-change up">+8%</span>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon posts">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statPosts">42</span>
+                            <span class="stat-label">Posts</span>
+                        </div>
+                        <span class="stat-change up">+3</span>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon likes">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statLikes">3,840</span>
+                            <span class="stat-label">Total Likes</span>
+                        </div>
+                        <span class="stat-change up">+5%</span>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon comments">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statComments">1,256</span>
+                            <span class="stat-label">Comments</span>
+                        </div>
+                        <span class="stat-change up">+18</span>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon readers">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statReaders">3,210</span>
+                            <span class="stat-label">Readers</span>
+                        </div>
+                        <span class="stat-change up">+6%</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========== MODIFIER CONTROLLER ========== -->
+            <section class="modifier-section">
+                <h2 class="section-title">Content Modifier</h2>
+                <p class="section-desc">Update non-post text, information and images on the homepage and profile page.</p>
+
+                <div class="modifier-tabs">
+                    <button class="mod-tab active" data-tab="homepage">Homepage</button>
+                    <button class="mod-tab" data-tab="profile">Profile Page</button>
+                </div>
+
+                <!-- Homepage Controls -->
+                <div class="mod-panel active" id="panel-homepage">
+                    <form id="homepageForm" class="mod-form">
+                        <div class="mod-card">
+                            <h3>Hero Section</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="heroBadge">Badge Text</label>
+                                    <input type="text" id="heroBadge" value="Featured">
+                                </div>
+                                <div class="form-group">
+                                    <label for="heroTitle">Hero Title</label>
+                                    <input type="text" id="heroTitle" value="Finding Balance in a Busy World">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="heroExcerpt">Hero Excerpt</label>
+                                <textarea id="heroExcerpt" rows="3">In a world that never stops, learning how to pause, breathe, and prioritize what truly matters has become one of the most valuable skills we can develop.</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Hero Image</label>
+                                <div class="image-mod-row">
+                                    <img src="assets/images/featured.jpg" alt="Current hero" class="mod-thumb" id="heroThumb">
+                                    <div>
+                                        <input type="file" id="heroImage" accept="image/*" hidden>
+                                        <button type="button" class="btn-outline btn-sm" id="heroImageBtn">Change Image</button>
+                                        <p class="hint">Recommended: 1200×800px</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mod-card">
+                            <h3>Sidebar – About Card</h3>
+                            <div class="form-group">
+                                <label for="aboutText">About Text</label>
+                                <textarea id="aboutText" rows="3">Sharing honest thoughts on lifestyle, personal growth, relationships, and the everyday moments that shape us.</textarea>
+                            </div>
+                        </div>
+
+                        <div class="mod-card">
+                            <h3>Footer</h3>
+                            <div class="form-group">
+                                <label for="footerTagline">Footer Tagline</label>
+                                <input type="text" id="footerTagline" value="Personal thoughts on lifestyle, growth, and the things that matter.">
+                            </div>
+                        </div>
+
+                        <div class="mod-actions">
+                            <button type="submit" class="btn-primary" id="saveHomepageBtn">Save Homepage Changes</button>
+                            <span class="save-status" id="homepageStatus"></span>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Profile Controls -->
+                <div class="mod-panel" id="panel-profile">
+                    <form id="profileForm" class="mod-form">
+                        <div class="mod-card">
+                            <h3>Profile Info</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="profileName">Display Name</label>
+                                    <input type="text" id="profileName" value="Mercy">
+                                </div>
+                                <div class="form-group">
+                                    <label for="profileTagline">Tagline</label>
+                                    <input type="text" id="profileTagline" value="Writer · Thinker · Everyday Observer">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileBio">Short Bio</label>
+                                <textarea id="profileBio" rows="3">Sharing honest thoughts on lifestyle, personal growth, relationships, and the quiet moments that shape who we become.</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Profile Avatar</label>
+                                <div class="image-mod-row">
+                                    <img src="assets/images/avatar.jpg" alt="Current avatar" class="mod-thumb round" id="avatarThumb">
+                                    <div>
+                                        <input type="file" id="avatarImage" accept="image/*" hidden>
+                                        <button type="button" class="btn-outline btn-sm" id="avatarImageBtn">Change Avatar</button>
+                                        <p class="hint">Recommended: square, min 200×200px</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mod-card">
+                            <h3>About Section</h3>
+                            <div class="form-group">
+                                <label for="aboutLong">Long About Text</label>
+                                <textarea id="aboutLong" rows="6">Hi, I'm Mercy. I write about the things that sit at the intersection of everyday life and deeper meaning — how we live, how we grow, how we relate to ourselves and each other.
+
+This space started as a personal journal and slowly became a place where I could share reflections on lifestyle, personal growth, relationships, and the quiet truths we often overlook. I believe the most interesting stories are the ones that happen in ordinary moments.
+
+When I'm not writing, you'll find me with a good book, experimenting in the kitchen, or taking long walks without a destination. I'm always learning, always observing, and always trying to live a little more intentionally.
+
+Thank you for being here. I hope something on these pages meets you where you are.</textarea>
+                            </div>
+                        </div>
+
+                        <div class="mod-card">
+                            <h3>Stats Numbers</h3>
+                            <div class="form-row three">
+                                <div class="form-group">
+                                    <label for="statArticles">Articles</label>
+                                    <input type="text" id="statArticles" value="40+">
+                                </div>
+                                <div class="form-group">
+                                    <label for="statTotalViews">Total Views</label>
+                                    <input type="text" id="statTotalViews" value="28k">
+                                </div>
+                                <div class="form-group">
+                                    <label for="statTotalReaders">Readers</label>
+                                    <input type="text" id="statTotalReaders" value="3.2k">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mod-actions">
+                            <button type="submit" class="btn-primary" id="saveProfileBtn">Save Profile Changes</button>
+                            <span class="save-status" id="profileStatus"></span>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="scripts/api.js"></script>
+    <script src="scripts/admin-dashboard.js"></script>
+</body>
+</html>

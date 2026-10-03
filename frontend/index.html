@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mercy's Blog - Personal thoughts, lifestyle & opinions on everyday matters">
+    <title>Mercy's Blog | Lifestyle & Personal Thoughts</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles/main.css">
+    
+    <!-- Local jQuery -->
+    <script src="scripts/jquery.js"></script>
+    <script src="scripts/api.js"></script>
+</head>
+<body>
+    <!-- ========== HEADER ========== -->
+    <header class="site-header" id="siteHeader">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">M</span>
+                <span class="logo-text">Mercy's Blog</span>
+            </a>
+
+            <nav class="main-nav" id="mainNav">
+                <ul>
+                    <li><a href="index.html" class="active">Home</a></li>
+                    <li><a href="profile-page.html">About</a></li>
+                    <li><a href="#categories">Categories</a></li>
+                    <li><a href="admin-login.html" class="nav-admin">Admin</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <button class="search-toggle" id="searchToggle" aria-label="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+                <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar" id="searchBar">
+            <div class="container">
+                <form class="search-form" id="searchForm">
+                    <input type="search" id="searchInput" placeholder="Search posts..." autocomplete="off">
+                    <button type="submit" aria-label="Submit search">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========== HERO / FEATURED ========== -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <span class="hero-badge">Featured</span>
+                <h1 class="hero-title">Finding Balance in a Busy World</h1>
+                <p class="hero-excerpt">
+                    In a world that never stops, learning how to pause, breathe, and prioritize what truly matters has become one of the most valuable skills we can develop.
+                </p>
+                <div class="hero-meta">
+                    <span class="author">By Mercy</span>
+                    <span class="dot">•</span>
+                    <span class="date">Sep 28, 2025</span>
+                    <span class="dot">•</span>
+                    <span class="read-time">6 min read</span>
+                </div>
+                <a href="post-page.html" class="btn-primary">Read Article</a>
+            </div>
+            <div class="hero-image">
+                <img src="assets/images/featured.jpg" alt="Finding Balance in a Busy World" width="800" height="500">
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-content">
+        <div class="container">
+            <div class="content-grid">
+                <!-- Posts Column -->
+                <div class="posts-column">
+                    <!-- Section Header -->
+                    <div class="section-header">
+                        <h2>Latest Posts</h2>
+                        <div class="filter-tabs" id="filterTabs">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="lifestyle">Lifestyle</button>
+                            <button class="filter-btn" data-filter="personal">Personal</button>
+                            <button class="filter-btn" data-filter="opinions">Opinions</button>
+                        </div>
+                    </div>
+
+                    <!-- Posts Grid -->
+                    <div class="posts-grid" id="postsGrid">
+                        <!-- Post cards will be injected by JS (or static placeholders) -->
+                    </div>
+
+                    <!-- Load More -->
+                    <div class="load-more-wrap">
+                        <button class="btn-outline" id="loadMoreBtn">Load More Posts</button>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <!-- About Author -->
+                    <div class="sidebar-card about-card">
+                        <div class="about-avatar">
+                            <span>M</span>
+                        </div>
+                        <h3>About Mercy</h3>
+                        <p>
+                            Sharing honest thoughts on lifestyle, personal growth, relationships, and the everyday moments that shape us.
+                        </p>
+                        <a href="profile-page.html" class="btn-text">View Profile →</a>
+                    </div>
+
+                    <!-- Categories -->
+                    <div class="sidebar-card" id="categories">
+                        <h3>Categories</h3>
+                        <ul class="category-list">
+                            <li>
+                                <a href="#" data-category="lifestyle">
+                                    <span>Lifestyle</span>
+                                    <span class="count">12</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-category="personal">
+                                    <span>Personal</span>
+                                    <span class="count">8</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-category="opinions">
+                                    <span>Opinions</span>
+                                    <span class="count">6</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-category="relationships">
+                                    <span>Relationships</span>
+                                    <span class="count">5</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-category="growth">
+                                    <span>Growth</span>
+                                    <span class="count">9</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Popular Posts -->
+                    <div class="sidebar-card">
+                        <h3>Popular Posts</h3>
+                        <ul class="popular-list">
+                            <li>
+                                <a href="post-page.html">
+                                    <span class="pop-num">01</span>
+                                    <div>
+                                        <h4>The Art of Saying No</h4>
+                                        <span class="pop-meta">4.2k views</span>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="post-page.html">
+                                    <span class="pop-num">02</span>
+                                    <div>
+                                        <h4>Morning Routines That Stick</h4>
+                                        <span class="pop-meta">3.8k views</span>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="post-page.html">
+                                    <span class="pop-num">03</span>
+                                    <div>
+                                        <h4>Why Comparison Steals Joy</h4>
+                                        <span class="pop-meta">3.1k views</span>
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo">
+                        <span class="logo-icon">M</span>
+                        <span class="logo-text">Mercy's Blog</span>
+                    </a>
+                    <p>Personal thoughts on lifestyle, growth, and the things that matter.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="profile-page.html">About</a></li>
+                        <li><a href="#categories">Categories</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Connect</h4>
+                    <ul>
+                        <li><a href="#">Twitter / X</a></li>
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="#">Email</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Mercy's Blog. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="scripts/main.js"></script>
+</body>
+</html>
