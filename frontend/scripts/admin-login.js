@@ -91,19 +91,16 @@ $(document).ready(function () {
         })
         .fail(function (xhr) {
             setLoading(false);
-            // Fallback to demo mode if backend is unreachable
-            if (xhr.status === 0 || xhr.status >= 500) {
-                if (email === 'admin@mercysblog.com' && password === 'Admin12345') {
-                    sessionStorage.setItem('adminLoggedIn', 'true');
-                    showFormMessage('Login successful (demo mode)! Redirecting...', 'success');
-                    setTimeout(function () {
-                        window.location.href = 'admin-dashboard.html';
-                    }, 1000);
-                    return;
-                }
+            var msg = 'Cannot reach the server. Check your connection or try again in a minute.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            } else if (xhr.status === 401) {
+                msg = 'Invalid email or password';
+            } else if (xhr.status === 0) {
+                msg = 'Cannot reach API (wrong URL, CORS, or server asleep). URL must be https://mercys-blog-api.onrender.com/api';
             }
-            const msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Something went wrong. Please try again.';
             showFormMessage(msg, 'error');
+            console.error('Login failed', xhr.status, xhr.responseText);
         });
     });
 

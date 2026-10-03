@@ -3,7 +3,7 @@
  * Base URL points to the Express backend
  */
 
-const API_BASE = 'https://mercys-blog-api.onrender.com';
+const API_BASE = 'https://mercys-blog-api.onrender.com/api';
 
 /** Get stored JWT */
 function getToken() {
