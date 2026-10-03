@@ -1,0 +1,411 @@
+/* ============================================
+   Mercy's Blog - Profile Page Styles
+   Extends main.css
+   ============================================ */
+
+/* ========== PROFILE HERO ========== */
+.profile-hero {
+    padding: 3.5rem 0 0;
+    background: linear-gradient(180deg, var(--pink-50) 0%, var(--bg-body) 100%);
+}
+
+.profile-hero-inner {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.profile-avatar-wrap {
+    flex-shrink: 0;
+}
+
+.profile-avatar {
+    width: 140px;
+    height: 140px;
+    background: linear-gradient(135deg, var(--pink-400), var(--pink-600));
+    color: var(--white);
+    font-size: 3.5rem;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 40px rgba(255, 92, 120, 0.25);
+    border: 4px solid var(--white);
+    object-fit: cover;
+}
+
+.profile-intro h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+    margin-bottom: 0.35rem;
+    color: var(--text-primary);
+}
+
+.profile-tagline {
+    font-size: 1.05rem;
+    color: var(--primary);
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.profile-short-bio {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 540px;
+    margin-bottom: 1.5rem;
+}
+
+.profile-social {
+    display: flex;
+    gap: 0.65rem;
+}
+
+.social-link {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition);
+}
+
+.social-link:hover {
+    background: var(--primary);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 92, 120, 0.3);
+}
+
+/* Stats */
+.profile-stats {
+    display: flex;
+    gap: 0;
+    background: var(--white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: -1.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+.stat-item {
+    flex: 1;
+    text-align: center;
+    padding: 1.5rem 1rem;
+    border-right: 1px solid var(--border);
+}
+
+.stat-item:last-child {
+    border-right: none;
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    margin-bottom: 0.2rem;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* ========== MAIN ========== */
+.profile-main {
+    padding: 4rem 0 5rem;
+}
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 3rem;
+    align-items: start;
+    margin-bottom: 4rem;
+}
+
+/* About Section */
+.about-section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    margin-bottom: 1.5rem;
+}
+
+.about-content p {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--gray-700);
+    margin-bottom: 1.25rem;
+}
+
+.about-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* Topics */
+.topics-section {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+}
+
+.topics-section h3 {
+    font-size: 1.1rem;
+    font-weight: 650;
+    margin-bottom: 1rem;
+}
+
+.topics-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.topic-tag {
+    display: inline-block;
+    padding: 0.4rem 0.95rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    transition: all var(--transition);
+}
+
+.topic-tag:hover {
+    border-color: var(--pink-300);
+    color: var(--primary);
+    background: var(--pink-50);
+}
+
+/* Sidebar */
+.profile-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: sticky;
+    top: 90px;
+}
+
+.quick-links li a {
+    display: block;
+    padding: 0.55rem 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--gray-100);
+    transition: color var(--transition);
+}
+
+.quick-links li:last-child a {
+    border-bottom: none;
+}
+
+.quick-links li a:hover {
+    color: var(--primary);
+}
+
+.contact-card p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+}
+
+.btn-sm {
+    padding: 0.55rem 1.2rem;
+    font-size: 0.875rem;
+}
+
+/* ========== LATEST FROM ME ========== */
+.latest-from-me .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+}
+
+.latest-from-me h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+}
+
+.profile-posts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.profile-post-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition), box-shadow var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-post-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+}
+
+.profile-post-card .card-image {
+    aspect-ratio: 16/10;
+    background: linear-gradient(135deg, var(--pink-100), var(--pink-200));
+    display: block;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-post-card .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.profile-post-card .category-tag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    background: var(--white);
+    color: var(--primary);
+    border-radius: var(--radius-full);
+}
+
+.profile-post-card .card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.profile-post-card h3 {
+    font-size: 1.05rem;
+    font-weight: 650;
+    line-height: 1.35;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.2px;
+}
+
+.profile-post-card h3 a:hover {
+    color: var(--primary);
+}
+
+.profile-post-card .card-excerpt {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin-bottom: 1rem;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.profile-post-card .card-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1024px) {
+    .profile-layout {
+        grid-template-columns: 1fr 260px;
+        gap: 2.5rem;
+    }
+
+    .profile-posts-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .profile-hero-inner {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+
+    .profile-short-bio {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .profile-social {
+        justify-content: center;
+    }
+
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-sidebar {
+        position: static;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-avatar {
+        width: 110px;
+        height: 110px;
+        font-size: 2.75rem;
+    }
+
+    .profile-intro h1 {
+        font-size: 2rem;
+    }
+
+    .profile-stats {
+        flex-direction: column;
+    }
+
+    .stat-item {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1.15rem;
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+
+    .profile-sidebar {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-posts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .latest-from-me .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
