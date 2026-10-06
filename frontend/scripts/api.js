@@ -3,14 +3,13 @@
  * Base URL points to the Express backend
  */
 
+// Always include /api — no trailing slash
 const API_BASE = 'https://mercys-blog-api.onrender.com/api';
 
-/** Get stored JWT */
 function getToken() {
   return localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
 }
 
-/** Save JWT */
 function setToken(token, remember) {
   if (remember) {
     localStorage.setItem('adminToken', token);
@@ -19,15 +18,13 @@ function setToken(token, remember) {
   }
 }
 
-/** Clear JWT (logout) */
 function clearToken() {
   localStorage.removeItem('adminToken');
   sessionStorage.removeItem('adminToken');
   sessionStorage.removeItem('adminLoggedIn');
 }
 
-/** Build headers (adds Authorization when token exists) */
-function apiHeaders(isFormData = false) {
+function apiHeaders(isFormData) {
   const headers = {};
   if (!isFormData) {
     headers['Content-Type'] = 'application/json';
@@ -40,37 +37,36 @@ function apiHeaders(isFormData = false) {
 }
 
 /**
- * Generic request helper
  * @param {string} method
- * @param {string} path - e.g. '/posts' or '/admin/login'
+ * @param {string} path - must start with / e.g. '/admin/login' or '/posts'
  * @param {object|FormData|null} body
  * @param {boolean} isFormData
  */
-function apiRequest(method, path, body = null, isFormData = false) {
-  const options = {
-    method,
-    headers: apiHeaders(isFormData)
-  };
+function apiRequest(method, path, body, isFormData) {
+  isFormData = !!isFormData;
+  if (!path) path = '/';
+  if (path.charAt(0) !== '/') path = '/' + path;
 
-  if (body) {
-    options.body = isFormData ? body : JSON.stringify(body);
-  }
+  // Guard against double /api/api if someone passes full path
+  var url = API_BASE + path;
+  url = url.replace(/\/api\/api\//, '/api/');
+
+  console.log('[API]', method, url);
 
   return $.ajax({
-    url: API_BASE + path,
-    method: options.method,
-    headers: options.headers,
-    data: options.body,
-    processData: isFormData ? false : undefined,
-    contentType: isFormData ? false : undefined,
+    url: url,
+    method: method,
+    headers: apiHeaders(isFormData),
+    data: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
+    processData: isFormData ? false : false,
+    contentType: isFormData ? false : 'application/json',
     dataType: 'json'
   });
 }
 
-// Convenience methods
-const api = {
-  get: (path) => apiRequest('GET', path),
-  post: (path, body, isFormData = false) => apiRequest('POST', path, body, isFormData),
-  put: (path, body, isFormData = false) => apiRequest('PUT', path, body, isFormData),
-  delete: (path) => apiRequest('DELETE', path)
+var api = {
+  get: function (path) { return apiRequest('GET', path); },
+  post: function (path, body, isFormData) { return apiRequest('POST', path, body, isFormData); },
+  put: function (path, body, isFormData) { return apiRequest('PUT', path, body, isFormData); },
+  delete: function (path) { return apiRequest('DELETE', path); }
 };
