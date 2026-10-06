@@ -79,7 +79,6 @@ $(document).ready(function () {
                 setTimeout(() => $status.text(''), 3000);
             });
     });
-        */
 
         // ---------- TEMPORARY MOCK ----------
         setTimeout(function () {
