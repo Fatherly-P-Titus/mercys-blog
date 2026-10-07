@@ -93,6 +93,10 @@ app.use((err, req, res, next) => {
   if (err.message === 'Not allowed by CORS') {
     return res.status(403).json({ success: false, message: 'CORS: origin not allowed' });
   }
+  // Multer errors
+  if (err.name === 'MulterError' || (err.message && /image|file|upload/i.test(err.message) && err.message.length < 120)) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
   res.status(err.status || 500).json({
     success: false,
     message: err.message || 'Internal server error'
