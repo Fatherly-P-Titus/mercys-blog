@@ -1,16 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const postsController = require('../controllers/postsController');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
-// All admin routes require auth
-router.use(authenticateToken, requireAdmin);
+/**
+ * Public:
+ *   GET /api/admin/site-content/:section
+ * Protected:
+ *   GET  /api/admin/stats
+ *   GET  /api/admin/posts
+ *   PUT  /api/admin/site-content/:section
+ */
 
-// Stats
-router.get('/stats', adminController.getStats);
-
-// Site content
+// Public read — homepage & profile content for the live site
 router.get('/site-content/:section', adminController.getSiteContent);
-router.put('/site-content/:section', adminController.updateSiteContent);
+
+// Admin-only
+router.get('/stats', authenticateToken, requireAdmin, adminController.getStats);
+router.get('/posts', authenticateToken, requireAdmin, postsController.getAllPosts);
+router.put(
+  '/site-content/:section',
+  authenticateToken,
+  requireAdmin,
+  adminController.updateSiteContent
+);
 
 module.exports = router;

@@ -3,6 +3,7 @@
  */
 
 const { supabaseAdmin } = require('../config/supabase');
+const commentsController = require('./commentsController');
 
 // In-memory site content for demo
 let siteContent = {
@@ -34,15 +35,29 @@ exports.getStats = async (req, res) => {
         .from('posts')
         .select('*', { count: 'exact', head: true });
 
+      // Sum views & likes from posts (real engagement)
+      let totalViews = 0;
+      let totalLikes = 0;
+      const { data: engagementRows } = await supabaseAdmin
+        .from('posts')
+        .select('views, likes');
+
+      if (engagementRows && engagementRows.length) {
+        engagementRows.forEach(function (row) {
+          totalViews += Number(row.views) || 0;
+          totalLikes += Number(row.likes) || 0;
+        });
+      }
+
       return res.json({
         success: true,
         stats: {
-          visitors: 12480,
-          views: 48320,
+          visitors: totalViews, // approximate unique visitors unavailable without analytics
+          views: totalViews,
           posts: postsCount || 0,
-          likes: 3840,
-          comments: 1256,
-          readers: 3210
+          likes: totalLikes,
+          comments: await commentsController.countComments(),
+          readers: totalViews
         }
       });
     }
@@ -69,6 +84,10 @@ exports.getStats = async (req, res) => {
 exports.getSiteContent = async (req, res) => {
   try {
     const { section } = req.params; // 'homepage' | 'profile'
+
+    if (!['homepage', 'profile'].includes(section)) {
+      return res.status(400).json({ success: false, message: 'Invalid section' });
+    }
 
     if (supabaseAdmin) {
       const { data, error } = await supabaseAdmin

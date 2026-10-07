@@ -1,6 +1,6 @@
 /**
  * Auth Controller – Admin login
- * 
+ * Credentials are read from environment variables (set on Render).
  */
 
 const jwt = require('jsonwebtoken');
@@ -61,8 +61,3 @@ exports.login = async (req, res) => {
 exports.me = async (req, res) => {
   res.json({ success: true, user: req.user });
 };
-
-
-
-
-

@@ -5,6 +5,7 @@
  */
 
 const { supabase, supabaseAdmin } = require('../config/supabase');
+const { uploadPostImage } = require('../utils/storage');
 
 // In-memory store for demo when Supabase is not connected
 let demoPosts = [
@@ -82,6 +83,8 @@ exports.getPosts = async (req, res) => {
 exports.getPost = async (req, res) => {
   try {
     const { idOrSlug } = req.params;
+    // Optional: ?countView=false to skip increment (e.g. admin preview)
+    const countView = req.query.countView !== 'false';
 
     if (supabase) {
       const isNumeric = /^\d+$/.test(idOrSlug);
@@ -99,6 +102,25 @@ exports.getPost = async (req, res) => {
       if (!data) {
         return res.status(404).json({ success: false, message: 'Post not found' });
       }
+
+      // Increment view count (best-effort; do not fail the response)
+      if (countView && data.status === 'published') {
+        const nextViews = (Number(data.views) || 0) + 1;
+        data.views = nextViews;
+        const client = supabaseAdmin || supabase;
+        (async function () {
+          try {
+            const { error: viewErr } = await client
+              .from('posts')
+              .update({ views: nextViews })
+              .eq('id', data.id);
+            if (viewErr) console.warn('View increment failed:', viewErr.message);
+          } catch (e) {
+            console.warn('View increment failed:', e.message || e);
+          }
+        })();
+      }
+
       return res.json({ success: true, post: data });
     }
 
@@ -106,10 +128,60 @@ exports.getPost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ success: false, message: 'Post not found' });
     }
+    if (countView && post.status === 'published') {
+      post.views = (Number(post.views) || 0) + 1;
+    }
     res.json({ success: true, post });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Failed to fetch post' });
+  }
+};
+
+// ---------- ADMIN LIST (all statuses) ----------
+exports.getAllPosts = async (req, res) => {
+  try {
+    const { status, page = 1, limit = 50 } = req.query;
+
+    if (supabaseAdmin) {
+      let query = supabaseAdmin
+        .from('posts')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false });
+
+      if (status && status !== 'all') {
+        query = query.eq('status', status);
+      }
+
+      const from = (page - 1) * Number(limit);
+      const to = from + Number(limit) - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+
+      return res.json({
+        success: true,
+        posts: data || [],
+        total: count || 0,
+        page: Number(page)
+      });
+    }
+
+    // Demo fallback
+    let posts = [...demoPosts];
+    if (status && status !== 'all') {
+      posts = posts.filter(p => p.status === status);
+    }
+    res.json({
+      success: true,
+      posts,
+      total: posts.length,
+      page: Number(page)
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to fetch posts' });
   }
 };
 
@@ -138,6 +210,19 @@ exports.createPost = async (req, res) => {
       }
     }
 
+    let imageUrl = null;
+    if (req.file) {
+      try {
+        imageUrl = await uploadPostImage(req.file);
+      } catch (uploadErr) {
+        console.error('Image upload failed:', uploadErr.message);
+        return res.status(400).json({
+          success: false,
+          message: uploadErr.message || 'Image upload failed'
+        });
+      }
+    }
+
     const newPost = {
       title,
       slug,
@@ -145,9 +230,9 @@ exports.createPost = async (req, res) => {
       content,
       category: type || 'general',
       tags: parsedTags,
-      status,
+      status: status || 'draft',
       author: 'Mercy',
-      image: req.file ? `/uploads/${req.file.filename}` : null,
+      image: imageUrl,
       views: 0,
       likes: 0
     };
@@ -182,6 +267,32 @@ exports.updatePost = async (req, res) => {
     const { id } = req.params;
     const updates = { ...req.body, updated_at: new Date().toISOString() };
     delete updates.id;
+
+    // Normalize category from type if sent
+    if (updates.type && !updates.category) {
+      updates.category = updates.type;
+    }
+    delete updates.type;
+
+    // Parse tags if string (multipart)
+    if (typeof updates.tags === 'string' && updates.tags.trim()) {
+      try {
+        updates.tags = JSON.parse(updates.tags);
+      } catch {
+        updates.tags = updates.tags.split(',').map(t => t.trim()).filter(Boolean);
+      }
+    }
+
+    if (req.file) {
+      try {
+        updates.image = await uploadPostImage(req.file);
+      } catch (uploadErr) {
+        return res.status(400).json({
+          success: false,
+          message: uploadErr.message || 'Image upload failed'
+        });
+      }
+    }
 
     if (supabaseAdmin) {
       const { data, error } = await supabaseAdmin
@@ -222,5 +333,47 @@ exports.deletePost = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Failed to delete post' });
+  }
+};
+
+// ---------- LIKE ----------
+exports.likePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (supabaseAdmin || supabase) {
+      const client = supabaseAdmin || supabase;
+      const { data: existing, error: fetchErr } = await client
+        .from('posts')
+        .select('id, likes')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (fetchErr) throw fetchErr;
+      if (!existing) {
+        return res.status(404).json({ success: false, message: 'Post not found' });
+      }
+
+      const nextLikes = (Number(existing.likes) || 0) + 1;
+      const { data, error } = await client
+        .from('posts')
+        .update({ likes: nextLikes })
+        .eq('id', id)
+        .select('id, likes')
+        .single();
+
+      if (error) throw error;
+      return res.json({ success: true, likes: data.likes });
+    }
+
+    const post = demoPosts.find(p => p.id == id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+    post.likes = (Number(post.likes) || 0) + 1;
+    res.json({ success: true, likes: post.likes });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to like post' });
   }
 };
