@@ -172,6 +172,15 @@
                         <span class="tag">Personal Growth</span>
                     </div>
 
+                    <!-- Engagement -->
+                    <div class="post-engagement">
+                        <button type="button" class="like-btn" id="likeBtn" aria-label="Like this article">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                            <span class="like-label">Like</span>
+                            <span class="like-count" id="likeCount">0</span>
+                        </button>
+                    </div>
+
                     <!-- Share -->
                     <div class="post-share">
                         <span class="share-label">Share this article</span>
@@ -231,29 +240,32 @@
                 </div>
             </section>
 
-            <!-- Comments Placeholder -->
-            <section class="comments-section">
-                <h2>Comments</h2>
-                <div class="comments-placeholder">
-                    <p>Comments will be available once the backend is connected.</p>
-                    <p class="muted">For now, feel free to share your thoughts on social media.</p>
-                </div>
+            <!-- Comments -->
+            <section class="comments-section" id="comments">
+                <h2>Comments <span class="comments-count" id="commentsCount"></span></h2>
 
-                <!-- Future comment form structure (commented for production readiness) -->
-                <!--
                 <form id="commentForm" class="comment-form">
                     <div class="form-group">
                         <label for="commentName">Name</label>
-                        <input type="text" id="commentName" required>
+                        <input type="text" id="commentName" name="author_name" maxlength="50" required placeholder="Your name" autocomplete="name">
                     </div>
                     <div class="form-group">
                         <label for="commentText">Comment</label>
-                        <textarea id="commentText" rows="4" required></textarea>
+                        <textarea id="commentText" name="content" rows="4" maxlength="2000" required placeholder="Share your thoughts…"></textarea>
+                        <span class="char-hint"><span id="commentCharCount">0</span>/2000</span>
                     </div>
-                    <button type="submit" class="btn-primary">Post Comment</button>
+                    <div class="comment-form-footer">
+                        <p class="comment-form-status" id="commentFormStatus" hidden></p>
+                        <button type="submit" class="btn-primary" id="commentSubmitBtn">
+                            <span class="btn-text">Post Comment</span>
+                            <span class="btn-loader" hidden>Posting…</span>
+                        </button>
+                    </div>
                 </form>
-                <div id="commentsList"></div>
-                -->
+
+                <div id="commentsList" class="comments-list">
+                    <p class="comments-loading">Loading comments…</p>
+                </div>
             </section>
         </div>
     </main>

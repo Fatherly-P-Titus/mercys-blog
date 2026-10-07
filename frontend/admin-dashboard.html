@@ -129,6 +129,97 @@
                 </div>
             </section>
 
+
+            <!-- ========== MANAGE POSTS ========== -->
+            <section class="posts-manage-section">
+                <div class="posts-manage-header">
+                    <div>
+                        <h2 class="section-title">Manage Posts</h2>
+                        <p class="section-desc">View, edit, or delete published and draft posts.</p>
+                    </div>
+                    <div class="posts-manage-actions">
+                        <select id="postsStatusFilter" class="status-filter" aria-label="Filter by status">
+                            <option value="all">All statuses</option>
+                            <option value="published">Published</option>
+                            <option value="draft">Drafts</option>
+                        </select>
+                        <button type="button" class="btn-outline" id="refreshPostsBtn">Refresh</button>
+                        <a href="post-creator.html" class="btn-primary btn-sm">+ New Post</a>
+                    </div>
+                </div>
+                <div class="posts-table-wrap">
+                    <table class="posts-table" id="postsTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="postsTableBody">
+                            <tr class="posts-loading-row">
+                                <td colspan="5">Loading posts…</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="posts-empty" id="postsEmpty" hidden>No posts found.</p>
+                <p class="posts-manage-status" id="postsManageStatus" hidden></p>
+            </section>
+
+            <!-- Edit Post Modal -->
+            <div class="modal-overlay" id="editPostModal" hidden>
+                <div class="modal-card" role="dialog" aria-labelledby="editPostTitle">
+                    <div class="modal-header">
+                        <h3 id="editPostTitle">Edit Post</h3>
+                        <button type="button" class="modal-close" id="editPostClose" aria-label="Close">&times;</button>
+                    </div>
+                    <form id="editPostForm" class="mod-form">
+                        <input type="hidden" id="editPostId">
+                        <div class="form-group">
+                            <label for="editTitle">Title</label>
+                            <input type="text" id="editTitle" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editType">Type</label>
+                                <select id="editType">
+                                    <option value="lifestyle">Lifestyle</option>
+                                    <option value="personal">Personal</option>
+                                    <option value="general">General</option>
+                                    <option value="opinions">Opinions</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="editStatus">Status</label>
+                                <select id="editStatus">
+                                    <option value="published">Published</option>
+                                    <option value="draft">Draft</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="editExcerpt">Excerpt</label>
+                            <textarea id="editExcerpt" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="editContent">Content</label>
+                            <textarea id="editContent" rows="10" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="editTags">Tags (comma-separated)</label>
+                            <input type="text" id="editTags" placeholder="balance, mindfulness">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-outline" id="editPostCancel">Cancel</button>
+                            <button type="submit" class="btn-primary" id="editPostSave">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <!-- ========== MODIFIER CONTROLLER ========== -->
             <section class="modifier-section">
                 <h2 class="section-title">Content Modifier</h2>
