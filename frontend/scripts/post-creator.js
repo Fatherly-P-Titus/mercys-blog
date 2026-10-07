@@ -5,6 +5,12 @@
  */
 
 $(document).ready(function () {
+    // Require admin JWT — hard redirect if missing
+    if (typeof getToken !== 'function' || !getToken()) {
+        window.location.href = 'admin-login.html';
+        return;
+    }
+
     const $form = $('#postForm');
     const $title = $('#postTitle');
     const $type = $('#postType');
@@ -210,28 +216,50 @@ $(document).ready(function () {
             status: 'published'
         };
 
+        // Must be logged in
+        if (typeof getToken === 'function' && !getToken()) {
+            setLoading(false);
+            showMessage('Please log in as admin before publishing.', 'error');
+            setTimeout(function () {
+                window.location.href = 'admin-login.html';
+            }, 1500);
+            return;
+        }
+
         api.post('/posts', postData)
             .done(function (response) {
                 setLoading(false);
-                if (response.success) {
-                    $statusBadge.text('Published').addClass('published');
-                    showMessage('Post published successfully!', 'success');
+                if (response.success && response.post) {
+                    $statusBadge.text('Published').removeClass('draft').addClass('published');
+                    var slug = response.post.slug;
+                    var id = response.post.id;
+                    var viewUrl = slug
+                        ? ('post-page.html?slug=' + encodeURIComponent(slug))
+                        : ('post-page.html?id=' + encodeURIComponent(id));
+                    showMessage('Published! Opening post…', 'success');
+                    setTimeout(function () {
+                        window.location.href = viewUrl;
+                    }, 1200);
                 } else {
-                    showMessage(response.message || 'Failed to publish', 'error');
-                    $statusBadge.text('Draft').addClass('draft');
+                    showMessage((response && response.message) || 'Failed to publish', 'error');
+                    $statusBadge.text('Draft').removeClass('published').addClass('draft');
                 }
             })
             .fail(function (xhr) {
                 setLoading(false);
-                $statusBadge.text('Draft').addClass('draft');
-                // Offline fallback
-                if (xhr.status === 0 || xhr.status >= 500) {
-                    showMessage('Backend offline – post saved locally (demo)', 'success');
-                    $statusBadge.text('Published').addClass('published');
-                    console.log('Demo publish:', postData);
+                $statusBadge.text('Draft').removeClass('published').addClass('draft');
+                if (xhr.status === 401 || xhr.status === 403) {
+                    showMessage('Session expired. Please log in again.', 'error');
+                    setTimeout(function () {
+                        window.location.href = 'admin-login.html';
+                    }, 1500);
                     return;
                 }
-                const msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Something went wrong';
+                if (xhr.status === 0) {
+                    showMessage('Cannot reach server. Check your connection and try again.', 'error');
+                    return;
+                }
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Something went wrong';
                 showMessage(msg, 'error');
             });
     });
@@ -244,23 +272,46 @@ $(document).ready(function () {
             return;
         }
 
-        const draftData = {
-            title: $title.val().trim() || 'Untitled Draft',
-            type: $type.val() || 'general',
-            excerpt: $excerpt.val().trim(),
-            content: $content.val().trim(),
-            tags: $tags.val().trim().split(',').map(t => t.trim()).filter(Boolean),
-            status: 'draft'
-        };
+        if (typeof getToken !== 'function' || !getToken()) {
+            showMessage('Please log in as admin before saving a draft.', 'error');
+            setTimeout(function () {
+                window.location.href = 'admin-login.html';
+            }, 1500);
+            return;
+        }
 
-        api.post('/posts', draftData)
-            .done(function () {
+        var formData = new FormData();
+        formData.append('title', $title.val().trim() || 'Untitled Draft');
+        formData.append('type', $type.val() || 'general');
+        formData.append('excerpt', $excerpt.val().trim());
+        formData.append('content', $content.val().trim());
+        formData.append('status', 'draft');
+        var tags = $tags.val().trim().split(',').map(function (t) { return t.trim(); }).filter(Boolean);
+        formData.append('tags', JSON.stringify(tags));
+        if ($fileInput[0].files && $fileInput[0].files[0]) {
+            formData.append('image', $fileInput[0].files[0]);
+        }
+
+        api.post('/posts', formData, true)
+            .done(function (response) {
                 $statusBadge.text('Draft').removeClass('published').addClass('draft');
-                showMessage('Draft saved', 'success');
+                if (response && response.success) {
+                    showMessage('Draft saved', 'success');
+                } else {
+                    showMessage((response && response.message) || 'Draft may not have saved', 'error');
+                }
             })
-            .fail(function () {
+            .fail(function (xhr) {
                 $statusBadge.text('Draft').removeClass('published').addClass('draft');
-                showMessage('Draft saved locally (backend offline)', 'success');
+                if (xhr.status === 401 || xhr.status === 403) {
+                    showMessage('Session expired. Please log in again.', 'error');
+                    setTimeout(function () {
+                        window.location.href = 'admin-login.html';
+                    }, 1500);
+                    return;
+                }
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Could not save draft';
+                showMessage(msg, 'error');
             });
     });
 

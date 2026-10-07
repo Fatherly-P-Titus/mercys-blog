@@ -10,6 +10,7 @@ $(document).ready(function () {
     const samplePosts = [
         {
             id: 1,
+            slug: "the-quiet-power-of-morning-silence",
             title: "The Quiet Power of Morning Silence",
             excerpt: "Before the world wakes up, there is a sacred window of stillness. Here's why protecting those first moments can change the entire tone of your day.",
             category: "lifestyle",
@@ -111,19 +112,22 @@ $(document).ready(function () {
         }
 
         postsToShow.forEach(post => {
+            const href = post.slug
+                ? `post-page.html?slug=${encodeURIComponent(post.slug)}`
+                : (post.id ? `post-page.html?id=${encodeURIComponent(post.id)}` : 'post-page.html');
             const card = `
                 <article class="post-card" data-category="${post.category}">
-                    <a href="post-page.html" class="card-image">
+                    <a href="${href}" class="card-image">
                         <span class="category-tag">${capitalize(post.category)}</span>
-                        <img src="${post.image}" alt="${post.title}" loading="lazy">
+                        <img src="${post.image || 'assets/images/post-1.jpg'}" alt="${post.title}" loading="lazy">
                     </a>
                     <div class="card-body">
-                        <h3><a href="post-page.html">${post.title}</a></h3>
-                        <p class="card-excerpt">${post.excerpt}</p>
+                        <h3><a href="${href}">${post.title}</a></h3>
+                        <p class="card-excerpt">${post.excerpt || ''}</p>
                         <div class="card-meta">
-                            <span>${post.date}</span>
+                            <span>${post.date || ''}</span>
                             <span class="dot">•</span>
-                            <span>${post.readTime} read</span>
+                            <span>${post.readTime || '5 min'} read</span>
                         </div>
                     </div>
                 </article>
@@ -144,165 +148,139 @@ $(document).ready(function () {
     }
 
 
+    // ========== HELPERS ==========
+    function postHref(post) {
+        if (post.slug) return 'post-page.html?slug=' + encodeURIComponent(post.slug);
+        if (post.id) return 'post-page.html?id=' + encodeURIComponent(post.id);
+        return 'post-page.html';
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text == null ? '' : String(text);
+        return div.innerHTML;
+    }
+
+    // ========== HERO FROM POST OR SITE CONTENT ==========
+    function updateHeroFromPost(post) {
+        if (!post) return;
+        var href = postHref(post);
+        $('.hero .btn-primary').attr('href', href);
+        // Only overwrite hero text if site content has not already set a custom title
+        if (!$('.hero-title').data('from-site-content')) {
+            if (post.title) $('.hero-title').text(post.title);
+            if (post.excerpt) $('.hero-excerpt').text(post.excerpt);
+            if (post.image) $('.hero-image img').attr('src', post.image).attr('alt', post.title || '');
+            if (post.date) $('.hero-meta .date').text(post.date);
+            if (post.readTime) $('.hero-meta .read-time').text(post.readTime + (String(post.readTime).indexOf('read') >= 0 ? '' : ' read'));
+            if (post.category) $('.hero-badge').text(capitalize(post.category));
+        } else {
+            // Still point CTA at real post when possible
+            $('.hero .btn-primary').attr('href', href);
+        }
+    }
+
+    function updatePopularList(posts) {
+        var $list = $('.popular-list');
+        if (!$list.length || !posts || !posts.length) return;
+
+        var top = posts.slice().sort(function (a, b) {
+            return (Number(b.views) || 0) - (Number(a.views) || 0);
+        }).slice(0, 3);
+
+        if (!top.length) return;
+
+        $list.empty();
+        top.forEach(function (post, i) {
+            var num = String(i + 1).padStart(2, '0');
+            var href = postHref(post);
+            var views = post.views != null
+                ? (Number(post.views).toLocaleString() + ' views')
+                : '';
+            var li =
+                '<li><a href="' + href + '">' +
+                '<span class="pop-num">' + num + '</span>' +
+                '<div><h4>' + escapeHtml(post.title) + '</h4>' +
+                (views ? '<span class="pop-meta">' + escapeHtml(views) + '</span>' : '') +
+                '</div></a></li>';
+            $list.append(li);
+        });
+    }
+
+    // ========== SITE CONTENT (homepage) ==========
+    function applyHomepageContent(c) {
+        if (!c || typeof c !== 'object') return;
+
+        if (c.heroBadge) $('.hero-badge').text(c.heroBadge);
+        if (c.heroTitle) {
+            $('.hero-title').text(c.heroTitle).data('from-site-content', true);
+        }
+        if (c.heroExcerpt) $('.hero-excerpt').text(c.heroExcerpt);
+        if (c.heroImage) {
+            $('.hero-image img').attr('src', c.heroImage).attr('alt', c.heroTitle || '');
+        }
+        if (c.aboutText) {
+            $('.about-card > p').first().text(c.aboutText);
+        }
+        if (c.footerTagline) {
+            $('.footer-brand > p').first().text(c.footerTagline);
+        }
+    }
+
+    function loadHomepageContent() {
+        if (typeof api === 'undefined') return $.Deferred().resolve().promise();
+        return api.get('/admin/site-content/homepage')
+            .done(function (res) {
+                if (res.success && res.content) {
+                    applyHomepageContent(res.content);
+                }
+            })
+            .fail(function () { /* keep static HTML */ });
+    }
+
     // Try loading posts from API (falls back to samplePosts)
     function tryLoadFromAPI() {
         if (typeof api === 'undefined') {
             renderPosts();
+            updatePopularList(samplePosts);
             return;
         }
-        api.get('/posts?limit=20')
+        api.get('/posts?limit=20&status=published')
             .done(function (res) {
                 if (res.success && res.posts && res.posts.length) {
-                    // Map API posts into the shape renderPosts expects
                     samplePosts.length = 0;
                     res.posts.forEach(function (p) {
+                        var words = (p.content || p.excerpt || '').trim().split(/\s+/).filter(Boolean).length;
+                        var mins = Math.max(1, Math.ceil(words / 200));
                         samplePosts.push({
                             id: p.id,
+                            slug: p.slug || '',
                             title: p.title,
                             excerpt: p.excerpt || '',
                             category: p.category || 'general',
                             date: p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
-                            readTime: '5 min',
+                            readTime: mins + ' min',
                             author: p.author || 'Mercy',
-                            image: p.image || 'assets/images/post-1.jpg'
+                            image: p.image || 'assets/images/post-1.jpg',
+                            views: p.views != null ? p.views : 0
                         });
                     });
+                    updateHeroFromPost(samplePosts[0]);
+                    updatePopularList(samplePosts);
+                } else {
+                    updatePopularList(samplePosts);
                 }
                 renderPosts();
             })
             .fail(function () {
-                renderPosts(); // use built-in sample data
+                renderPosts();
+                updatePopularList(samplePosts);
             });
     }
 
-    tryLoadFromAPI();
-
-
-    // ========== FILTER TABS ==========
-    $('#filterTabs').on('click', '.filter-btn', function () {
-        const filter = $(this).data('filter');
-        currentFilter = filter;
-        visibleCount = 6;
-
-        $('.filter-btn').removeClass('active');
-        $(this).addClass('active');
-
-        renderPosts(filter, visibleCount);
-    });
-
-    // ========== LOAD MORE ==========
-    $('#loadMoreBtn').on('click', function () {
-        visibleCount += 4;
-        renderPosts(currentFilter, visibleCount);
-    });
-
-    // ========== CATEGORY SIDEBAR CLICKS ==========
-    $('.category-list').on('click', 'a', function (e) {
-        e.preventDefault();
-        const category = $(this).data('category');
-
-        // Map sidebar categories to filter tabs where possible
-        const validFilters = ['lifestyle', 'personal', 'opinions'];
-        if (validFilters.includes(category)) {
-            currentFilter = category;
-            visibleCount = 6;
-
-            $('.filter-btn').removeClass('active');
-            $(`.filter-btn[data-filter="${category}"]`).addClass('active');
-
-            renderPosts(category, visibleCount);
-
-            // Smooth scroll to posts
-            $('html, body').animate({
-                scrollTop: $('.posts-column').offset().top - 80
-            }, 400);
-        }
-    });
-
-    // ========== MOBILE MENU ==========
-    const $menuToggle = $('#menuToggle');
-    const $mainNav = $('#mainNav');
-
-    $menuToggle.on('click', function () {
-        $(this).toggleClass('active');
-        $mainNav.toggleClass('open');
-    });
-
-    // Close menu when clicking a link
-    $mainNav.on('click', 'a', function () {
-        $menuToggle.removeClass('active');
-        $mainNav.removeClass('open');
-    });
-
-    // ========== SEARCH TOGGLE ==========
-    const $searchToggle = $('#searchToggle');
-    const $searchBar = $('#searchBar');
-    const $searchInput = $('#searchInput');
-
-    $searchToggle.on('click', function () {
-        $searchBar.toggleClass('open');
-        if ($searchBar.hasClass('open')) {
-            $searchInput.focus();
-        }
-    });
-
-    // ========== SEARCH FORM ==========
-    $('#searchForm').on('submit', function (e) {
-        e.preventDefault();
-        const query = $searchInput.val().trim().toLowerCase();
-
-        if (!query) {
-            renderPosts(currentFilter, visibleCount);
-            return;
-        }
-
-        const results = samplePosts.filter(post =>
-            post.title.toLowerCase().includes(query) ||
-            post.excerpt.toLowerCase().includes(query) ||
-            post.category.toLowerCase().includes(query)
-        );
-
-        const $grid = $('#postsGrid');
-        $grid.empty();
-
-        if (results.length === 0) {
-            $grid.html(`<p class="no-posts">No posts found for "<strong>${$searchInput.val()}</strong>"</p>`);
-            $('#loadMoreBtn').hide();
-            return;
-        }
-
-        results.forEach(post => {
-            const card = `
-                <article class="post-card" data-category="${post.category}">
-                    <a href="post-page.html" class="card-image">
-                        <span class="category-tag">${capitalize(post.category)}</span>
-                        <img src="${post.image}" alt="${post.title}" loading="lazy">
-                    </a>
-                    <div class="card-body">
-                        <h3><a href="post-page.html">${post.title}</a></h3>
-                        <p class="card-excerpt">${post.excerpt}</p>
-                        <div class="card-meta">
-                            <span>${post.date}</span>
-                            <span class="dot">•</span>
-                            <span>${post.readTime} read</span>
-                        </div>
-                    </div>
-                </article>
-            `;
-            $grid.append(card);
-        });
-
-        $('#loadMoreBtn').hide();
-        $searchBar.removeClass('open');
-    });
-
-    // ========== HEADER SCROLL EFFECT ==========
-    $(window).on('scroll', function () {
-        if ($(this).scrollTop() > 20) {
-            $('#siteHeader').addClass('scrolled');
-        } else {
-            $('#siteHeader').removeClass('scrolled');
-        }
+    // Load site content first, then posts (so content flags are set before hero overwrite)
+    loadHomepageContent().always(function () {
+        tryLoadFromAPI();
     });
 
     // ============================================================
