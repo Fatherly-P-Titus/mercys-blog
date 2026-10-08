@@ -278,6 +278,120 @@ $(document).ready(function () {
             });
     }
 
+
+    // ========== MOBILE MENU ==========
+    $('#menuToggle').on('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).toggleClass('active');
+        $('#mainNav').toggleClass('open');
+        // Close search when opening menu
+        if ($('#mainNav').hasClass('open')) {
+            $('#searchBar').removeClass('open');
+        }
+    });
+
+    // Close mobile menu when a nav link is tapped
+    $('#mainNav a').on('click', function () {
+        $('#menuToggle').removeClass('active');
+        $('#mainNav').removeClass('open');
+    });
+
+    // ========== SEARCH TOGGLE ==========
+    $('#searchToggle').on('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#searchBar').toggleClass('open');
+        if ($('#searchBar').hasClass('open')) {
+            $('#searchInput').trigger('focus');
+            $('#menuToggle').removeClass('active');
+            $('#mainNav').removeClass('open');
+        }
+    });
+
+    // ========== SEARCH SUBMIT ==========
+    $('#searchForm').on('submit', function (e) {
+        e.preventDefault();
+        var q = ($('#searchInput').val() || '').trim().toLowerCase();
+        if (!q) {
+            currentFilter = 'all';
+            visibleCount = 6;
+            $('.filter-btn').removeClass('active');
+            $('.filter-btn[data-filter="all"]').addClass('active');
+            renderPosts('all', visibleCount);
+            return;
+        }
+        // Client-side filter of loaded posts
+        var $grid = $('#postsGrid');
+        if (!$grid.length) return;
+        var matched = samplePosts.filter(function (p) {
+            var hay = ((p.title || '') + ' ' + (p.excerpt || '') + ' ' + (p.category || '')).toLowerCase();
+            return hay.indexOf(q) !== -1;
+        });
+        $grid.empty();
+        if (!matched.length) {
+            $grid.html('<p class="no-posts">No posts match “' + $('<div>').text(q).html() + '”.</p>');
+            $('#loadMoreBtn').hide();
+            return;
+        }
+        matched.forEach(function (post) {
+            var href = post.slug
+                ? 'post-page.html?slug=' + encodeURIComponent(post.slug)
+                : (post.id ? 'post-page.html?id=' + encodeURIComponent(post.id) : 'post-page.html');
+            var card =
+                '<article class="post-card" data-category="' + post.category + '">' +
+                '<a href="' + href + '" class="card-image">' +
+                '<span class="category-tag">' + capitalize(post.category) + '</span>' +
+                '<img src="' + (post.image || 'assets/images/post-1.jpg') + '" alt="" loading="lazy">' +
+                '</a><div class="card-body"><h3><a href="' + href + '">' + post.title + '</a></h3>' +
+                '<p class="card-excerpt">' + (post.excerpt || '') + '</p></div></article>';
+            $grid.append(card);
+        });
+        $('#loadMoreBtn').hide();
+        $('#searchBar').removeClass('open');
+    });
+
+    // ========== FILTER TABS ==========
+    $('#filterTabs').on('click', '.filter-btn', function () {
+        var filter = $(this).data('filter') || 'all';
+        currentFilter = filter;
+        visibleCount = 6;
+        $('.filter-btn').removeClass('active');
+        $(this).addClass('active');
+        renderPosts(currentFilter, visibleCount);
+    });
+
+    // ========== LOAD MORE ==========
+    $('#loadMoreBtn').on('click', function () {
+        visibleCount += 6;
+        renderPosts(currentFilter, visibleCount);
+    });
+
+    // ========== HEADER SCROLL ==========
+    $(window).on('scroll', function () {
+        if ($(this).scrollTop() > 20) {
+            $('#siteHeader').addClass('scrolled');
+        } else {
+            $('#siteHeader').removeClass('scrolled');
+        }
+    });
+
+    // ========== CATEGORY SIDEBAR LINKS ==========
+    $('.category-list').on('click', 'a[data-category]', function (e) {
+        e.preventDefault();
+        var cat = $(this).data('category');
+        if (!cat) return;
+        currentFilter = cat;
+        visibleCount = 6;
+        $('.filter-btn').removeClass('active');
+        var $tab = $('.filter-btn[data-filter="' + cat + '"]');
+        if ($tab.length) $tab.addClass('active');
+        else $('.filter-btn[data-filter="all"]').addClass('active');
+        renderPosts(currentFilter, visibleCount);
+        $('html, body').animate({ scrollTop: $('#postsGrid').offset().top - 90 }, 400);
+    });
+
+
     // Load site content first, then posts (so content flags are set before hero overwrite)
     loadHomepageContent().always(function () {
         tryLoadFromAPI();
