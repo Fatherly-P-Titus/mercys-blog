@@ -6,7 +6,7 @@
 
 const { supabase, supabaseAdmin } = require('../config/supabase');
 
-// In-memory store when Supabase is offline
+// In-memory store when Supabase table is unavailable
 let demoComments = [];
 let demoId = 1;
 
@@ -17,20 +17,44 @@ function sanitizeText(str, max) {
     .slice(0, max);
 }
 
+function isMissingTableError(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || err.hint || '');
+  const code = String(err.code || '');
+  return (
+    code === '42P01' ||
+    /relation .* does not exist/i.test(msg) ||
+    /could not find the table/i.test(msg) ||
+    /schema cache/i.test(msg)
+  );
+}
+
 // ---------- LIST (public) ----------
 exports.getComments = async (req, res) => {
   try {
     const { id: postId } = req.params;
+    const client = supabaseAdmin || supabase;
 
-    if (supabase) {
-      const { data, error } = await supabase
+    if (client) {
+      const { data, error } = await client
         .from('comments')
         .select('id, post_id, author_name, content, created_at')
         .eq('post_id', postId)
         .eq('status', 'approved')
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        if (isMissingTableError(error)) {
+          console.warn('comments table missing — returning empty list');
+          return res.json({
+            success: true,
+            comments: [],
+            total: 0,
+            warning: 'Comments table not set up yet'
+          });
+        }
+        throw error;
+      }
 
       return res.json({
         success: true,
@@ -44,8 +68,11 @@ exports.getComments = async (req, res) => {
     );
     res.json({ success: true, comments: list, total: list.length });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Failed to load comments' });
+    console.error('getComments error:', err);
+    res.status(500).json({
+      success: false,
+      message: err.message || 'Failed to load comments'
+    });
   }
 };
 
@@ -69,9 +96,12 @@ exports.createComment = async (req, res) => {
       });
     }
 
-    // Ensure post exists (best-effort)
-    if (supabase) {
-      const { data: post, error: postErr } = await supabase
+    const readClient = supabaseAdmin || supabase;
+    const writeClient = supabaseAdmin || supabase;
+
+    // Ensure post exists and is published
+    if (readClient) {
+      const { data: post, error: postErr } = await readClient
         .from('posts')
         .select('id, status')
         .eq('id', postId)
@@ -91,15 +121,27 @@ exports.createComment = async (req, res) => {
       created_at: new Date().toISOString()
     };
 
-    if (supabaseAdmin || supabase) {
-      const client = supabaseAdmin || supabase;
-      const { data, error } = await client
+    if (writeClient) {
+      const { data, error } = await writeClient
         .from('comments')
         .insert([row])
         .select('id, post_id, author_name, content, created_at')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (isMissingTableError(error)) {
+          return res.status(503).json({
+            success: false,
+            message:
+              'Comments are not set up yet. Create the comments table in Supabase (see COMMENTS_SETUP.md).'
+          });
+        }
+        console.error('createComment supabase error:', error);
+        return res.status(500).json({
+          success: false,
+          message: error.message || 'Failed to post comment'
+        });
+      }
       return res.status(201).json({ success: true, message: 'Comment posted', comment: data });
     }
 
@@ -107,8 +149,11 @@ exports.createComment = async (req, res) => {
     demoComments.push(demo);
     res.status(201).json({ success: true, message: 'Comment posted', comment: demo });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Failed to post comment' });
+    console.error('createComment error:', err);
+    res.status(500).json({
+      success: false,
+      message: err.message || 'Failed to post comment'
+    });
   }
 };
 
@@ -116,15 +161,24 @@ exports.createComment = async (req, res) => {
 exports.deleteComment = async (req, res) => {
   try {
     const { id: postId, commentId } = req.params;
+    const client = supabaseAdmin || supabase;
 
-    if (supabaseAdmin) {
-      const { error } = await supabaseAdmin
+    if (client) {
+      const { error } = await client
         .from('comments')
         .delete()
         .eq('id', commentId)
         .eq('post_id', postId);
 
-      if (error) throw error;
+      if (error) {
+        if (isMissingTableError(error)) {
+          return res.status(503).json({
+            success: false,
+            message: 'Comments table not set up yet'
+          });
+        }
+        throw error;
+      }
       return res.json({ success: true, message: 'Comment deleted' });
     }
 
@@ -140,12 +194,18 @@ exports.deleteComment = async (req, res) => {
 
 // ---------- COUNT (for stats) ----------
 exports.countComments = async () => {
-  if (supabaseAdmin) {
-    const { count } = await supabaseAdmin
-      .from('comments')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'approved');
-    return count || 0;
+  const client = supabaseAdmin || supabase;
+  if (client) {
+    try {
+      const { count, error } = await client
+        .from('comments')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'approved');
+      if (error) return 0;
+      return count || 0;
+    } catch (e) {
+      return 0;
+    }
   }
   return demoComments.filter((c) => c.status === 'approved').length;
 };
