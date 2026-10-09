@@ -3,6 +3,7 @@
  */
 
 const { supabaseAdmin } = require('../config/supabase');
+const { uploadPostImage } = require('../utils/storage');
 const commentsController = require('./commentsController');
 
 // In-memory site content for demo
@@ -161,5 +162,23 @@ exports.updateSiteContent = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Failed to update content' });
+  }
+};
+
+
+// ---------- IMAGE UPLOAD (hero / avatar / etc.) ----------
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file provided' });
+    }
+    const url = await uploadPostImage(req.file);
+    res.json({ success: true, url });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({
+      success: false,
+      message: err.message || 'Image upload failed'
+    });
   }
 };
