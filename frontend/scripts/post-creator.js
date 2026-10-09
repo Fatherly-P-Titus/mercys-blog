@@ -22,6 +22,13 @@ $(document).ready(function () {
     const $previewBtn = $('#previewBtn');
     const $formMessage = $('#formMessage');
     const $statusBadge = $('#statusBadge');
+    // When set, Save Draft / Publish updates this post instead of creating a new one
+    var currentPostId = null;
+    try {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('id')) currentPostId = params.get('id');
+    } catch (e) {}
+
 
     // ========== CHARACTER / WORD COUNTS ==========
     function updateCounts() {
@@ -220,17 +227,8 @@ $(document).ready(function () {
         setLoading(true);
         $statusBadge.text('Publishing...').removeClass('draft published');
 
-        const postData = {
-            title: $title.val().trim(),
-            type: $type.val(),
-            excerpt: $excerpt.val().trim(),
-            content: $content.val().trim(),
-            tags: $tags.val().trim().split(',').map(t => t.trim()).filter(Boolean),
-            status: 'published'
-        };
-
         // Must be logged in
-        if (typeof getToken === 'function' && !getToken()) {
+        if (typeof getToken !== 'function' || !getToken()) {
             setLoading(false);
             showMessage('Please log in as admin before publishing.', 'error');
             setTimeout(function () {
@@ -239,10 +237,25 @@ $(document).ready(function () {
             return;
         }
 
-        api.post('/posts', postData)
-            .done(function (response) {
-                setLoading(false);
+        var formData = new FormData();
+        formData.append('title', $title.val().trim());
+        formData.append('type', $type.val() || 'general');
+        formData.append('excerpt', $excerpt.val().trim());
+        formData.append('content', $content.val().trim());
+        formData.append('status', 'published');
+        var tags = $tags.val().trim().split(',').map(function (t) { return t.trim(); }).filter(Boolean);
+        formData.append('tags', JSON.stringify(tags));
+        if ($fileInput[0] && $fileInput[0].files && $fileInput[0].files[0]) {
+            formData.append('image', $fileInput[0].files[0]);
+        }
+
+        var req = currentPostId
+            ? api.put('/posts/' + encodeURIComponent(currentPostId), formData, true)
+            : api.post('/posts', formData, true);
+
+        req.done(function (response) {
                 if (response.success && response.post) {
+                    currentPostId = response.post.id;
                     $statusBadge.text('Published').removeClass('draft').addClass('published');
                     var slug = response.post.slug;
                     var id = response.post.id;
@@ -259,7 +272,6 @@ $(document).ready(function () {
                 }
             })
             .fail(function (xhr) {
-                setLoading(false);
                 $statusBadge.text('Draft').removeClass('published').addClass('draft');
                 if (xhr.status === 401 || xhr.status === 403) {
                     showMessage('Session expired. Please log in again.', 'error');
@@ -274,6 +286,9 @@ $(document).ready(function () {
                 }
                 var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Something went wrong';
                 showMessage(msg, 'error');
+            })
+            .always(function () {
+                setLoading(false);
             });
     });
 
@@ -297,20 +312,33 @@ $(document).ready(function () {
         formData.append('title', $title.val().trim() || 'Untitled Draft');
         formData.append('type', $type.val() || 'general');
         formData.append('excerpt', $excerpt.val().trim());
-        formData.append('content', $content.val().trim());
+        formData.append('content', $content.val().trim() || '');
         formData.append('status', 'draft');
         var tags = $tags.val().trim().split(',').map(function (t) { return t.trim(); }).filter(Boolean);
         formData.append('tags', JSON.stringify(tags));
-        if ($fileInput[0].files && $fileInput[0].files[0]) {
+        if ($fileInput[0] && $fileInput[0].files && $fileInput[0].files[0]) {
             formData.append('image', $fileInput[0].files[0]);
         }
 
-        api.post('/posts', formData, true)
-            .done(function (response) {
-                $statusBadge.text('Draft').removeClass('published').addClass('draft');
+        $statusBadge.text('Saving…').removeClass('published').addClass('draft');
+        $saveDraftBtn.prop('disabled', true);
+
+        var req = currentPostId
+            ? api.put('/posts/' + encodeURIComponent(currentPostId), formData, true)
+            : api.post('/posts', formData, true);
+
+        req.done(function (response) {
                 if (response && response.success) {
-                    showMessage('Draft saved', 'success');
+                    if (response.post && response.post.id) {
+                        currentPostId = response.post.id;
+                        try {
+                            history.replaceState(null, '', 'post-creator.html?id=' + encodeURIComponent(currentPostId));
+                        } catch (e) {}
+                    }
+                    $statusBadge.text('Draft').removeClass('published').addClass('draft');
+                    showMessage(currentPostId ? 'Draft updated' : 'Draft saved', 'success');
                 } else {
+                    $statusBadge.text('Draft').addClass('draft');
                     showMessage((response && response.message) || 'Draft may not have saved', 'error');
                 }
             })
@@ -323,8 +351,11 @@ $(document).ready(function () {
                     }, 1500);
                     return;
                 }
-                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Could not save draft';
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || ('Could not save draft (' + (xhr.status || 'network') + ')');
                 showMessage(msg, 'error');
+            })
+            .always(function () {
+                $saveDraftBtn.prop('disabled', false);
             });
     });
 
@@ -384,4 +415,26 @@ $(document).ready(function () {
         div.textContent = text;
         return div.innerHTML;
     }
+
+    // Load existing post for edit (from Manage Posts or re-opened draft)
+    if (currentPostId && typeof api !== 'undefined') {
+        api.get('/posts/' + encodeURIComponent(currentPostId) + '?countView=false')
+            .done(function (res) {
+                if (!res.success || !res.post) return;
+                var post = res.post;
+                $title.val(post.title || '');
+                $type.val(post.category || post.type || 'general');
+                $excerpt.val(post.excerpt || '');
+                $content.val(post.content || '');
+                if (post.tags && post.tags.length) {
+                    $tags.val(Array.isArray(post.tags) ? post.tags.join(', ') : post.tags);
+                }
+                $statusBadge
+                    .text(post.status === 'published' ? 'Published' : 'Draft')
+                    .removeClass('draft published')
+                    .addClass(post.status === 'published' ? 'published' : 'draft');
+                if (typeof updateCounts === 'function') updateCounts();
+            });
+    }
+
 });

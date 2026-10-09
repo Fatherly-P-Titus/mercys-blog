@@ -374,33 +374,42 @@ $(document).ready(function () {
             return;
         }
 
-        // Update slug if title changed
-        payload.slug = payload.title
+        // Only send slug when title is present; backend keeps existing if omitted
+        var existing = managedPosts.find(function (p) { return String(p.id) === String(id); });
+        var newSlug = payload.title
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/(^-|-$)/g, '');
+        if (existing && existing.slug && existing.title === payload.title) {
+            payload.slug = existing.slug;
+        } else if (newSlug) {
+            payload.slug = newSlug;
+        }
 
-        $('#editPostSave').prop('disabled', true).text('Saving…');
+        var $saveBtn = $('#editPostSave');
+        $saveBtn.prop('disabled', true).text('Saving…');
 
         api.put('/posts/' + encodeURIComponent(id), payload)
             .done(function (res) {
-                $('#editPostSave').prop('disabled', false).text('Save changes');
-                if (res.success) {
+                if (res && res.success) {
                     closeEditModal();
                     showPostsStatus('Post updated', 'success');
                     loadManagedPosts();
                 } else {
-                    showPostsStatus(res.message || 'Update failed', 'error');
+                    showPostsStatus((res && res.message) || 'Update failed', 'error');
                 }
             })
             .fail(function (xhr) {
-                $('#editPostSave').prop('disabled', false).text('Save changes');
                 if (xhr.status === 401 || xhr.status === 403) {
                     showPostsStatus('Session expired. Please log in again.', 'error');
+                    setTimeout(function () { window.location.href = 'admin-login.html'; }, 1500);
                     return;
                 }
-                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Update failed';
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || ('Update failed (' + (xhr.status || 'network') + ')');
                 showPostsStatus(msg, 'error');
+            })
+            .always(function () {
+                $saveBtn.prop('disabled', false).text('Save changes');
             });
     });
 
