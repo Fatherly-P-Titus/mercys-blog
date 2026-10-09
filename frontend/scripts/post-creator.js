@@ -92,30 +92,34 @@ $(document).ready(function () {
     const $preview = $('#imagePreview');
     const $previewImg = $('#previewImg');
 
-    $uploadArea.on('click', function (e) {
-        if (!$(e.target).closest('.remove-image').length) {
-            $fileInput.trigger('click');
+    // File picker: opened via <label for="postImage"> (works on mobile).
+    // Do NOT use input.trigger('click') — blocked on many phones.
+    function showImagePreview(file) {
+        if (!file) return;
+        if (!file.type || file.type.indexOf('image/') !== 0) {
+            showMessage('Please choose an image file (JPG, PNG, or WebP)', 'error');
+            return;
         }
-    });
+        if (file.size > 2 * 1024 * 1024) {
+            showMessage('Image must be under 2MB', 'error');
+            $fileInput.val('');
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+            $previewImg.attr('src', ev.target.result);
+            $placeholder.prop('hidden', true);
+            $preview.prop('hidden', false);
+        };
+        reader.readAsDataURL(file);
+    }
 
     $fileInput.on('change', function () {
-        const file = this.files[0];
-        if (file) {
-            if (file.size > 2 * 1024 * 1024) {
-                showMessage('Image must be under 2MB', 'error');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                $previewImg.attr('src', e.target.result);
-                $placeholder.prop('hidden', true);
-                $preview.prop('hidden', false);
-            };
-            reader.readAsDataURL(file);
-        }
+        var file = this.files && this.files[0];
+        if (file) showImagePreview(file);
     });
 
-    // Drag & drop
+    // Drag & drop (desktop)
     $uploadArea.on('dragover', function (e) {
         e.preventDefault();
         $(this).addClass('dragover');
@@ -123,14 +127,23 @@ $(document).ready(function () {
         e.preventDefault();
         $(this).removeClass('dragover');
     }).on('drop', function (e) {
-        const file = e.originalEvent.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            $fileInput[0].files = e.originalEvent.dataTransfer.files;
-            $fileInput.trigger('change');
+        var files = e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files;
+        var file = files && files[0];
+        if (file && file.type && file.type.indexOf('image/') === 0) {
+            // Assign via DataTransfer for browsers that allow it
+            try {
+                var dt = new DataTransfer();
+                dt.items.add(file);
+                $fileInput[0].files = dt.files;
+            } catch (err) {
+                // Fallback: still preview even if we cannot set input.files
+            }
+            showImagePreview(file);
         }
     });
 
     $('#removeImage').on('click', function (e) {
+        e.preventDefault();
         e.stopPropagation();
         $fileInput.val('');
         $previewImg.attr('src', '');
