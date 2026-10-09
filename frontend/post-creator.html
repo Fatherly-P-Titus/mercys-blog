@@ -154,23 +154,31 @@ You can use simple formatting:
                             </div>
                         </div>
 
-                        <!-- Featured Image (placeholder for now) -->
+                        <!-- Featured Image -->
                         <div class="form-group">
-                            <label>Featured Image <span class="optional">(optional)</span></label>
+                            <span class="field-label">Featured Image <span class="optional">(optional)</span></span>
                             <div class="image-upload-area" id="imageUploadArea">
-                                <input type="file" id="postImage" name="image" accept="image/*" hidden>
-                                <div class="upload-placeholder" id="uploadPlaceholder">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <!-- Visible label opens the picker on mobile (no JS click needed) -->
+                                <label class="upload-placeholder" id="uploadPlaceholder" for="postImage">
+                                    <input
+                                        type="file"
+                                        id="postImage"
+                                        name="image"
+                                        accept="image/*"
+                                        class="file-input-native"
+                                    >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                                         <circle cx="8.5" cy="8.5" r="1.5"></circle>
                                         <polyline points="21 15 16 10 5 21"></polyline>
                                     </svg>
-                                    <p>Click to upload or drag & drop</p>
+                                    <p>Tap to upload image</p>
                                     <span class="hint">JPG, PNG or WebP · Max 2MB</span>
-                                </div>
+                                </label>
                                 <div class="image-preview" id="imagePreview" hidden>
                                     <img id="previewImg" src="" alt="Preview">
                                     <button type="button" class="remove-image" id="removeImage" aria-label="Remove image">×</button>
+                                    <label class="change-image" for="postImage">Change image</label>
                                 </div>
                             </div>
                         </div>
