@@ -170,14 +170,18 @@ $(document).ready(function () {
         if (!$('.hero-title').data('from-site-content')) {
             if (post.title) $('.hero-title').text(post.title);
             if (post.excerpt) $('.hero-excerpt').text(post.excerpt);
-            if (post.image) $('.hero-image img').attr('src', post.image).attr('alt', post.title || '');
+            if (post.category) $('.hero-badge').text(capitalize(post.category));
+        }
+        // Only use post image if admin has not set a custom hero image
+        if (!$('.hero-image').data('from-site-content') && post.image) {
+            $('.hero-image img').attr('src', post.image).attr('alt', post.title || '');
+        }
+        if (!$('.hero-title').data('from-site-content')) {
             if (post.date) $('.hero-meta .date').text(post.date);
             if (post.readTime) $('.hero-meta .read-time').text(post.readTime + (String(post.readTime).indexOf('read') >= 0 ? '' : ' read'));
-            if (post.category) $('.hero-badge').text(capitalize(post.category));
-        } else {
-            // Still point CTA at real post when possible
-            $('.hero .btn-primary').attr('href', href);
         }
+        // Always point CTA at real post when possible
+        $('.hero .btn-primary').attr('href', href);
     }
 
     function updatePopularList(posts) {
@@ -218,6 +222,7 @@ $(document).ready(function () {
         if (c.heroExcerpt) $('.hero-excerpt').text(c.heroExcerpt);
         if (c.heroImage) {
             $('.hero-image img').attr('src', c.heroImage).attr('alt', c.heroTitle || '');
+            $('.hero-image').data('from-site-content', true);
         }
         if (c.aboutText) {
             $('.about-card > p').first().text(c.aboutText);

@@ -20,35 +20,92 @@ $(document).ready(function () {
         $('#panel-' + tab).addClass('active');
     });
 
-    // ========== IMAGE PICKERS ==========
+    // ========== IMAGE STATE (URLs saved with site content) ==========
+    var pendingHeroImageUrl = null;
+    var pendingAvatarImageUrl = null;
+
+    function uploadAdminImage(file, $statusEl) {
+        var deferred = $.Deferred();
+        if (!file) {
+            deferred.reject({ message: 'No file' });
+            return deferred.promise();
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            deferred.reject({ message: 'Image must be under 2MB' });
+            return deferred.promise();
+        }
+        if (file.type && file.type.indexOf('image/') !== 0) {
+            deferred.reject({ message: 'Please choose an image file' });
+            return deferred.promise();
+        }
+        if ($statusEl) $statusEl.text('Uploading image…').removeClass('success error');
+
+        var fd = new FormData();
+        fd.append('image', file);
+
+        api.post('/admin/upload', fd, true)
+            .done(function (res) {
+                if (res && res.success && res.url) {
+                    deferred.resolve(res.url);
+                } else {
+                    deferred.reject({ message: (res && res.message) || 'Upload failed' });
+                }
+            })
+            .fail(function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Upload failed';
+                deferred.reject({ message: msg, status: xhr.status });
+            });
+
+        return deferred.promise();
+    }
+
+    // Prefer label association in HTML; keep button as fallback
     $('#heroImageBtn').on('click', function () {
         $('#heroImage').trigger('click');
     });
-
-    $('#heroImage').on('change', function () {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                $('#heroThumb').attr('src', e.target.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
     $('#avatarImageBtn').on('click', function () {
         $('#avatarImage').trigger('click');
     });
 
+    $('#heroImage').on('change', function () {
+        var file = this.files && this.files[0];
+        if (!file) return;
+        // Local preview immediately
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            $('#heroThumb').attr('src', e.target.result);
+        };
+        reader.readAsDataURL(file);
+
+        uploadAdminImage(file, $('#homepageStatus'))
+            .done(function (url) {
+                pendingHeroImageUrl = url;
+                $('#heroThumb').attr('src', url);
+                $('#homepageStatus').text('Hero image ready — click Save Homepage').addClass('success');
+            })
+            .fail(function (err) {
+                $('#homepageStatus').text(err.message || 'Image upload failed').removeClass('success').addClass('error');
+            });
+    });
+
     $('#avatarImage').on('change', function () {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                $('#avatarThumb').attr('src', e.target.result);
-            };
-            reader.readAsDataURL(file);
-        }
+        var file = this.files && this.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            $('#avatarThumb').attr('src', e.target.result);
+        };
+        reader.readAsDataURL(file);
+
+        uploadAdminImage(file, $('#profileStatus'))
+            .done(function (url) {
+                pendingAvatarImageUrl = url;
+                $('#avatarThumb').attr('src', url);
+                $('#profileStatus').text('Avatar ready — click Save Profile').addClass('success');
+            })
+            .fail(function (err) {
+                $('#profileStatus').text(err.message || 'Image upload failed').removeClass('success').addClass('error');
+            });
     });
 
     // ========== SAVE HOMEPAGE ==========
@@ -63,20 +120,38 @@ $(document).ready(function () {
             footerTagline: $('#footerTagline').val().trim()
         };
 
+        // Prefer newly uploaded URL, else current thumb if it is a real http(s) URL
+        var heroSrc = pendingHeroImageUrl || $('#heroThumb').attr('src') || '';
+        if (heroSrc && (heroSrc.indexOf('http') === 0 || heroSrc.indexOf('/assets/') === 0 || heroSrc.indexOf('/uploads/') === 0)) {
+            // Skip pure data: URLs (too large / not durable)
+            if (heroSrc.indexOf('data:') !== 0) {
+                data.heroImage = heroSrc;
+            }
+        }
+
         const $status = $('#homepageStatus');
         $status.text('Saving...').removeClass('success error');
 
         api.put('/admin/site-content/homepage', data)
             .done(function (res) {
                 $status.text('Homepage saved!').addClass('success');
-                localStorage.setItem('siteContent_homepage', JSON.stringify(data));
-                setTimeout(() => $status.text(''), 3000);
+                if (res && res.content) {
+                    localStorage.setItem('siteContent_homepage', JSON.stringify(res.content));
+                    if (res.content.heroImage) {
+                        pendingHeroImageUrl = res.content.heroImage;
+                        $('#heroThumb').attr('src', res.content.heroImage);
+                    }
+                } else {
+                    localStorage.setItem('siteContent_homepage', JSON.stringify(data));
+                }
+                setTimeout(function () { $status.text(''); }, 3000);
             })
             .fail(function (xhr) {
-                // Fallback: save locally
-                localStorage.setItem('siteContent_homepage', JSON.stringify(data));
-                $status.text('Saved locally (backend offline)').addClass('success');
-                setTimeout(() => $status.text(''), 3000);
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Save failed';
+                if (xhr.status === 401 || xhr.status === 403) {
+                    msg = 'Session expired. Please log in again.';
+                }
+                $status.text(msg).removeClass('success').addClass('error');
             });
     });
 
@@ -94,19 +169,36 @@ $(document).ready(function () {
             statTotalReaders: $('#statTotalReaders').val().trim()
         };
 
+        var avatarSrc = pendingAvatarImageUrl || $('#avatarThumb').attr('src') || '';
+        if (avatarSrc && avatarSrc.indexOf('data:') !== 0) {
+            if (avatarSrc.indexOf('http') === 0 || avatarSrc.indexOf('/assets/') === 0 || avatarSrc.indexOf('/uploads/') === 0) {
+                data.avatarImage = avatarSrc;
+            }
+        }
+
         const $status = $('#profileStatus');
         $status.text('Saving...').removeClass('success error');
 
         api.put('/admin/site-content/profile', data)
             .done(function (res) {
                 $status.text('Profile saved!').addClass('success');
-                localStorage.setItem('siteContent_profile', JSON.stringify(data));
-                setTimeout(() => $status.text(''), 3000);
+                if (res && res.content) {
+                    localStorage.setItem('siteContent_profile', JSON.stringify(res.content));
+                    if (res.content.avatarImage) {
+                        pendingAvatarImageUrl = res.content.avatarImage;
+                        $('#avatarThumb').attr('src', res.content.avatarImage);
+                    }
+                } else {
+                    localStorage.setItem('siteContent_profile', JSON.stringify(data));
+                }
+                setTimeout(function () { $status.text(''); }, 3000);
             })
-            .fail(function () {
-                localStorage.setItem('siteContent_profile', JSON.stringify(data));
-                $status.text('Saved locally (backend offline)').addClass('success');
-                setTimeout(() => $status.text(''), 3000);
+            .fail(function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Save failed';
+                if (xhr.status === 401 || xhr.status === 403) {
+                    msg = 'Session expired. Please log in again.';
+                }
+                $status.text(msg).removeClass('success').addClass('error');
             });
     });
 
@@ -118,6 +210,10 @@ $(document).ready(function () {
         if (c.heroExcerpt) $('#heroExcerpt').val(c.heroExcerpt);
         if (c.aboutText) $('#aboutText').val(c.aboutText);
         if (c.footerTagline) $('#footerTagline').val(c.footerTagline);
+        if (c.heroImage) {
+            pendingHeroImageUrl = c.heroImage;
+            $('#heroThumb').attr('src', c.heroImage);
+        }
     }
 
     function fillProfileForm(c) {
@@ -129,6 +225,10 @@ $(document).ready(function () {
         if (c.statArticles) $('#statArticles').val(c.statArticles);
         if (c.statTotalViews) $('#statTotalViews').val(c.statTotalViews);
         if (c.statTotalReaders) $('#statTotalReaders').val(c.statTotalReaders);
+        if (c.avatarImage) {
+            pendingAvatarImageUrl = c.avatarImage;
+            $('#avatarThumb').attr('src', c.avatarImage);
+        }
     }
 
     function loadSavedContent() {
