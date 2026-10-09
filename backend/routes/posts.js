@@ -5,10 +5,19 @@ const commentsController = require('../controllers/commentsController');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const { upload } = require('../middleware/upload');
 
+/** Run multer only when the request is multipart (JSON PUTs skip it) */
+function optionalImage(req, res, next) {
+  const ct = req.headers['content-type'] || '';
+  if (ct.indexOf('multipart/form-data') === 0) {
+    return upload.single('image')(req, res, next);
+  }
+  return next();
+}
+
 // Public list
 router.get('/', postsController.getPosts);
 
-// Comments (must be before /:idOrSlug for clarity; multi-segment paths are distinct)
+// Comments
 router.get('/:id/comments', commentsController.getComments);
 router.post('/:id/comments', commentsController.createComment);
 router.delete(
@@ -24,19 +33,19 @@ router.post('/:id/like', postsController.likePost);
 // Single post
 router.get('/:idOrSlug', postsController.getPost);
 
-// Admin CRUD — optional image via multipart field "image"
+// Admin CRUD
 router.post(
   '/',
   authenticateToken,
   requireAdmin,
-  upload.single('image'),
+  optionalImage,
   postsController.createPost
 );
 router.put(
   '/:id',
   authenticateToken,
   requireAdmin,
-  upload.single('image'),
+  optionalImage,
   postsController.updatePost
 );
 router.delete('/:id', authenticateToken, requireAdmin, postsController.deletePost);
