@@ -190,14 +190,20 @@ exports.createPost = async (req, res) => {
   try {
     const { title, type, excerpt, content, tags, status = 'draft' } = req.body;
 
-    if (!title || !content) {
-      return res.status(400).json({ success: false, message: 'Title and content are required' });
+    const isDraft = (status || 'draft') === 'draft';
+    if (!title) {
+      return res.status(400).json({ success: false, message: 'Title is required' });
+    }
+    if (!content && !isDraft) {
+      return res.status(400).json({ success: false, message: 'Content is required to publish' });
     }
 
-    const slug = title
+    let slug = title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
+      .replace(/(^-|-$)/g, '') || 'post';
+    // Reduce unique collisions when re-saving drafts with the same title
+    slug = slug + '-' + Date.now().toString(36).slice(-5);
 
     let parsedTags = [];
     if (Array.isArray(tags)) {
@@ -314,7 +320,12 @@ exports.updatePost = async (req, res) => {
     res.json({ success: true, post: demoPosts[index] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: 'Failed to update post' });
+    const msg = (err && err.message) || 'Failed to update post';
+    // Unique violation etc.
+    if (/duplicate|unique/i.test(msg)) {
+      return res.status(409).json({ success: false, message: 'A post with this title/slug already exists. Change the title slightly.' });
+    }
+    res.status(500).json({ success: false, message: msg });
   }
 };
 
