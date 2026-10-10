@@ -332,6 +332,12 @@ $(document).ready(function () {
         managedPosts.forEach(function (post) {
             var status = post.status || 'draft';
             var cat = post.category || post.type || 'general';
+            var publishBtn = '';
+            if (status === 'draft') {
+                publishBtn = '<button type="button" class="btn-publish-post" data-id="' + post.id + '">Publish</button>';
+            } else if (status === 'published') {
+                publishBtn = '<button type="button" class="btn-unpublish-post" data-id="' + post.id + '">Unpublish</button>';
+            }
             var tr =
                 '<tr data-id="' + post.id + '">' +
                 '<td class="post-title-cell"><a href="' + postViewHref(post) + '" target="_blank" rel="noopener">' +
@@ -342,6 +348,7 @@ $(document).ready(function () {
                 '<td><div class="post-row-actions">' +
                 '<a href="' + postViewHref(post) + '" target="_blank" rel="noopener">View</a>' +
                 '<button type="button" class="btn-edit-post" data-id="' + post.id + '">Edit</button>' +
+                publishBtn +
                 '<button type="button" class="btn-delete-post btn-danger" data-id="' + post.id + '">Delete</button>' +
                 '</div></td></tr>';
             $body.append(tr);
@@ -437,6 +444,70 @@ $(document).ready(function () {
                     return;
                 }
                 var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Delete failed';
+                showPostsStatus(msg, 'error');
+            });
+    });
+
+    // Publish draft → published
+    $('#postsTableBody').on('click', '.btn-publish-post', function () {
+        var id = $(this).data('id');
+        var post = managedPosts.find(function (p) { return String(p.id) === String(id); });
+        var label = post ? post.title : ('#' + id);
+        if (!confirm('Publish “' + label + '”? It will appear on the public site.')) return;
+
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('Publishing…');
+
+        api.put('/posts/' + encodeURIComponent(id), { status: 'published' })
+            .done(function (res) {
+                if (res && res.success) {
+                    showPostsStatus('Post published', 'success');
+                    loadManagedPosts();
+                    fetchStats();
+                } else {
+                    showPostsStatus((res && res.message) || 'Publish failed', 'error');
+                    $btn.prop('disabled', false).text('Publish');
+                }
+            })
+            .fail(function (xhr) {
+                $btn.prop('disabled', false).text('Publish');
+                if (xhr.status === 401 || xhr.status === 403) {
+                    showPostsStatus('Session expired. Please log in again.', 'error');
+                    return;
+                }
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Publish failed';
+                showPostsStatus(msg, 'error');
+            });
+    });
+
+    // Unpublish → draft
+    $('#postsTableBody').on('click', '.btn-unpublish-post', function () {
+        var id = $(this).data('id');
+        var post = managedPosts.find(function (p) { return String(p.id) === String(id); });
+        var label = post ? post.title : ('#' + id);
+        if (!confirm('Unpublish “' + label + '”? It will become a draft and leave the public site.')) return;
+
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('…');
+
+        api.put('/posts/' + encodeURIComponent(id), { status: 'draft' })
+            .done(function (res) {
+                if (res && res.success) {
+                    showPostsStatus('Post unpublished (draft)', 'success');
+                    loadManagedPosts();
+                    fetchStats();
+                } else {
+                    showPostsStatus((res && res.message) || 'Unpublish failed', 'error');
+                    $btn.prop('disabled', false).text('Unpublish');
+                }
+            })
+            .fail(function (xhr) {
+                $btn.prop('disabled', false).text('Unpublish');
+                if (xhr.status === 401 || xhr.status === 403) {
+                    showPostsStatus('Session expired. Please log in again.', 'error');
+                    return;
+                }
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Unpublish failed';
                 showPostsStatus(msg, 'error');
             });
     });
