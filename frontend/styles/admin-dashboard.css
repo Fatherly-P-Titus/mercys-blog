@@ -645,3 +645,22 @@
         display: none;
     }
 }
+
+.post-row-actions .btn-publish-post {
+    color: #1a7f4b;
+    border-color: #c8e6d4;
+    font-weight: 600;
+}
+.post-row-actions .btn-publish-post:hover {
+    background: #e8f8ef;
+    border-color: #1a7f4b;
+    color: #1a7f4b;
+}
+.post-row-actions .btn-unpublish-post {
+    color: #8a6d3b;
+    border-color: #e8d9a8;
+}
+.post-row-actions .btn-unpublish-post:hover {
+    background: #fff8e8;
+    border-color: #8a6d3b;
+}
