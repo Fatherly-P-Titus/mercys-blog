@@ -3,7 +3,7 @@
  * Basic offline caching for PWA
  */
 
-const CACHE_NAME = 'mercys-blog-v12';
+const CACHE_NAME = 'mercys-blog-v13';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
